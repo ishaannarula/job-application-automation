@@ -6,8 +6,3 @@
 /dataSources.local.xml
 # Editor-based HTTP Client requests
 /httpRequests/
-# Ignored files/ directories added by me
-Archive/
-Dataframes/
-careerswebsitelinks.xlsx
-careerswebsitelinks2.xlsx
