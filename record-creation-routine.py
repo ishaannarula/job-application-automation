@@ -6,8 +6,8 @@ path = os.path.join(parent_dir, directory)
 os.mkdir(path)
 
 # Add CV files
-cv_location = '/Volumes/GoogleDrive/My Drive/Career/CVs/6 After MS Versions/English CVs/Markets, Hedge Funds, Investment Management/'
-cv_files = ['CV_Ishaan Narula.docx', 'CV_Ishaan Narula.pdf']
+cv_location = 'enter file path'
+cv_files = ['fname.docx', 'fname.pdf']
 
 import shutil
 for f in cv_files:
