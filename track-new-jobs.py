@@ -138,9 +138,9 @@ def save_newjobs(new_jobs, file_name):
 
     print("New jobs on the given webpage added to the existing Excel file", file_name)
 
-targetlinks_df = pd.read_excel('careerswebsitelinks2.xlsx')
-for idx, row in targetlinks_df.iterrows():
-    new_jobs(row[0], row[1])
+#targetlinks_df = pd.read_excel('careerswebsitelinks2.xlsx')
+#for idx, row in targetlinks_df.iterrows():
+#    new_jobs(row[0], row[1])
 
-#fidel = new_jobs('Fidelity International', 'https://fil.wd3.myworkdayjobs.com/en-US/001')
-#save_newjobs(fidel, 'Fidelity International.xlsx')
+#mill = new_jobs('Millennium Management', 'https://mlp.wd5.myworkdayjobs.com/en-US/mlpcareers')
+#save_newjobs(mill, 'Millennium Management.xlsx')
