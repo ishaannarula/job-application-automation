@@ -8,13 +8,13 @@ driver.get("https://boards.greenhouse.io/bridgewater89/jobs/5086910002?t=qo3vb0u
 
 
 my_details = {
-    'first_name': 'Ishaan',
-    'last_name': 'Narula',
-    'email': 'ishaan.narula1@gmail.com',
-    'phone': '+44 7493125408',
-    'school': 'Other',
-    'company': 'Morgan Stanley',
-    'linkedin': 'https://www.linkedin.com/in/ishaan-narula'
+    'first_name': 'Enter first name',
+    'last_name': 'Enter last name',
+    'email': 'Enter e-mail',
+    'phone': 'Enter phone no.',
+    'school': 'Enter school name',
+    'company': 'Enter company name',
+    'linkedin': 'Enter linkedin profile link'
 }
 if 'greenhouse' in driver.current_url:
     #driver.find_element_by_xpath('//*[@class="btn-agree"]').click() #accept cookies
