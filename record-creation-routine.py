@@ -1,6 +1,6 @@
 # Create folder
 import os
-directory = 'Aberdeen Standard Investments - Senior Investment Analyst (R0067938) - Edinburgh'
+directory = 'enter folder name for job opening (e.g. Company Name - Position Name - Job ID - Location'
 parent_dir = '/Volumes/GoogleDrive/My Drive/Career/Search/Applications/To be Added to Excel Database/'
 path = os.path.join(parent_dir, directory)
 os.mkdir(path)

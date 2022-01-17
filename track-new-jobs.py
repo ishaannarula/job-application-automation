@@ -110,7 +110,7 @@ def new_jobs(company_name, url):
     prev_jobs_df = prev_jobs_df.drop(['Date Posted', 'Date Viewed'], axis = 1)
     prev_jobs_df.fillna('', inplace = True)
     #print(prev_jobs_df)
-xyzabc
+
     #df_diff = pd.concat([prev_jobs_df,latest_jobs_df]).drop_duplicates(keep = False) #Understand
     df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', indicator = True)
     #print(df_combined)
