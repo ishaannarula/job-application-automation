@@ -40,7 +40,7 @@ def create_jobsdf(company_name, url):
     raw = urlopen(req).read().decode()
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down.
 
-    #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
+    pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
 
     jobs_lst = []
     partial_urls = []
@@ -54,16 +54,17 @@ def create_jobsdf(company_name, url):
     if company_name == 'Vontobel Asset Management': # for Vontobel careers site - find a more general solution later
         n = 5
         jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  # Understand
-        jobs_df = pd.DataFrame(jobs_lst, columns=['Position', 'Division', 'Job ID', 'Location', 'Date Posted'])
+        #jobs_df = pd.DataFrame(jobs_lst, columns=['Position', 'Division', 'Job ID', 'Location', 'Date Posted'])
 
     else:
         n = 4
         jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  # Understand
-        jobs_df = pd.DataFrame(jobs_lst, columns=['Position', 'Job ID', 'Location', 'Date Posted'])
 
-    #print(jobs_lst)
-    #print(partial_urls)
-    #print(len(partial_urls))
+    jobs_df = pd.DataFrame(pd.Series(jobs_lst), columns = ['Role'])
+
+    print(jobs_lst)
+    print(partial_urls)
+    print(len(partial_urls))
 
     jobs_df.insert(0, 'Company', company_name)
     jobs_df['URL'] = pd.DataFrame(partial_urls)
@@ -71,6 +72,7 @@ def create_jobsdf(company_name, url):
     idx_crit = url.find(s) + len(s)
     jobs_df['URL'] = url[ : idx_crit] + jobs_df['URL']
 
+    print(jobs_df)
     return jobs_df
 
 
@@ -97,8 +99,10 @@ def new_jobs(company_name, url):
     Returns a dataframe with new jobs added/ existing jobs changed on the company's Workday website compared
     with the jobs in the last saved Excel file
 
-    Drawback: Some jobs posted earlier are often re-posted. This would not capture jobs when they are re-posted (only
+    Drawbacks to Fix:
+    - Some jobs posted earlier are often re-posted. This would not capture jobs when they are re-posted (only
     when they were posted for the first time
+    - Posts with the same job title but different job IDs appear only once (maybe that's because of the above point)
     '''
 
     url = str(url)
@@ -106,21 +110,21 @@ def new_jobs(company_name, url):
 
     latest_jobs_df = create_jobsdf(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
-    latestdf_DatePosted = latest_jobs_df.pop('Date Posted')
-    #print(latest_jobs_df)
+    #latestdf_DatePosted = latest_jobs_df.pop('Date Posted')
+    print(latest_jobs_df)
 
     prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
-    prev_jobs_df = prev_jobs_df.drop(['Date Posted', 'Date Viewed'], axis = 1)
+    prev_jobs_df = prev_jobs_df.drop('Date Viewed', axis = 1)
     prev_jobs_df.fillna('', inplace = True)
-    #print(prev_jobs_df)
+    print(prev_jobs_df)
 
     #df_diff = pd.concat([prev_jobs_df,latest_jobs_df]).drop_duplicates(keep = False) #Understand
     df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', indicator = True)
-    #print(df_combined)
+    print(df_combined)
     df_diff = df_combined.loc[df_combined._merge == 'right_only'].reset_index(drop = True)
     df_diff = df_diff.drop('_merge', axis = 1)
 
-    latest_jobs_df.insert(latest_jobs_df.columns.get_loc('URL'), 'Date Posted', latestdf_DatePosted)
+    #latest_jobs_df.insert(latest_jobs_df.columns.get_loc('URL'), 'Date Viewed', latestdf_DatePosted)
     dfdiff_DatePosted = pd.merge(df_diff.copy(), latest_jobs_df, how = 'inner', on = 'Job ID')['Date Posted']
     df_diff.insert(df_diff.columns.get_loc('URL'), 'Date Posted', dfdiff_DatePosted)
     df_diff['Date Viewed'] = datetime.now()
@@ -141,9 +145,9 @@ def save_newjobs(new_jobs, file_name):
 
     print("New jobs on the given webpage added to the existing Excel file", file_name)
 
-targetlinks_df = pd.read_excel('careerswebsitelinks2.xlsx')
-for idx, row in targetlinks_df.iterrows():
-    new_jobs(row[0], row[1])
+#targetlinks_df = pd.read_excel('careerswebsitelinks2.xlsx')
+#for idx, row in targetlinks_df.iterrows():
+#    new_jobs(row[0], row[1])
 
-#mill = new_jobs('Millennium Management', 'https://mlp.wd5.myworkdayjobs.com/en-US/mlpcareers')
-#save_newjobs(mill, 'Millennium Management.xlsx')
+#bxt = create_jobsdf('Blackstone', 'https://blackstone.wd1.myworkdayjobs.com/en-US/Blackstone_Careers')
+fil = create_jobsdf('Fidelity International', 'https://fil.wd3.myworkdayjobs.com/en-US/001')
