@@ -151,3 +151,10 @@ def save_newjobs(new_jobs, file_name):
 
 #bxt = create_jobsdf('Blackstone', 'https://blackstone.wd1.myworkdayjobs.com/en-US/Blackstone_Careers')
 fil = create_jobsdf('Fidelity International', 'https://fil.wd3.myworkdayjobs.com/en-US/001')
+
+'''
+Pull Request Description
+Moving from a structure with separate columns for 'Company Name', 'Position', 'Job ID', 'Date Posted', 'URL'... 
+to a structure which combines all position details in one column, and keeps other columns for date posted, company name, 
+URL and date viewed.
+'''
