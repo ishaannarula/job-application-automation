@@ -96,6 +96,9 @@ def new_jobs(company_name, url):
     '''
     Returns a dataframe with new jobs added/ existing jobs changed on the company's Workday website compared
     with the jobs in the last saved Excel file
+
+    Drawback: Some jobs posted earlier are often re-posted. This would not capture jobs when they are re-posted (only
+    when they were posted for the first time
     '''
 
     url = str(url)
@@ -138,9 +141,9 @@ def save_newjobs(new_jobs, file_name):
 
     print("New jobs on the given webpage added to the existing Excel file", file_name)
 
-#targetlinks_df = pd.read_excel('careerswebsitelinks2.xlsx')
-#for idx, row in targetlinks_df.iterrows():
-#    new_jobs(row[0], row[1])
+targetlinks_df = pd.read_excel('careerswebsitelinks2.xlsx')
+for idx, row in targetlinks_df.iterrows():
+    new_jobs(row[0], row[1])
 
 #mill = new_jobs('Millennium Management', 'https://mlp.wd5.myworkdayjobs.com/en-US/mlpcareers')
 #save_newjobs(mill, 'Millennium Management.xlsx')
