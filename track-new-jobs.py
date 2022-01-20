@@ -194,18 +194,3 @@ def df_column_switch(df, column1, column2):
 #for idx, row in targetlinks_df.iterrows():
 #    if row[2] == 'W':
 #        new_jobs(row[0], row[1], save_to_excel = False)
-
-
-'''
-Pull Request Description
-Moving from a dataframe structure with separate columns for 'Company Name', 'Position', 'Job ID', 'Date Posted', 'URL'... 
-to a structure which combines all position details in one column (i.e. position name, job ID, division, location, etc.) but 
-keeps separate columns for date posted, company name, URL and date viewed.
-
-Did not carry out the above conversion for Blackstone and Blackstone Campus. The format of the old dfs was full of errors. So,
-just created fresh dataframes for these URLs using the first_jobsdf_toexcel function.
-
-Note: In the dataframes that we converted from old to new format, the elements of the Date Posted column do not take the list format.
-When the functions create_jobsdf and first_jobsdf_toexcel updated in this pull request are run, the elements of the Date Posted column 
-that they create take the list format. This would not affect the new_jobs function thoough. 
-'''
