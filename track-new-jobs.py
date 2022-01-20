@@ -9,7 +9,7 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
 from datetime import datetime
 
-def get_all(myjson): #Understand
+def get_all(myjson): #U
     """ Recursively find the keys and associated values in all the dictionaries
         in the json object or list.
     """
@@ -40,7 +40,7 @@ def create_jobsdf(company_name, url):
     raw = urlopen(req).read().decode()
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down.
 
-    pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
+    #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
 
     jobs_lst = []
     partial_urls = []
@@ -51,26 +51,44 @@ def create_jobsdf(company_name, url):
         elif key == 'commandLink':
             partial_urls.append(value)
 
-    if company_name == 'Vontobel Asset Management': # for Vontobel careers site - find a more general solution later
+    if company_name == 'Vontobel Asset Management': #for Vontobel careers site - find a more general solution later
         n = 5
-        jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  # Understand
-        #jobs_df = pd.DataFrame(jobs_lst, columns=['Position', 'Division', 'Job ID', 'Location', 'Date Posted'])
+        jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  #U
 
     else:
         n = 4
-        jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  # Understand
+        jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  #U
 
-    jobs_df = pd.DataFrame(pd.Series(jobs_lst), columns = ['Role'])
+    jobs_lst2 = []
+    date_posted = []
+    for lst in jobs_lst:
+        lst2 = [x for x in lst if not x.startswith('Posted')]
+        lst_dp = list(set(lst) - set(lst2))
+        jobs_lst2.append(lst2)
+        date_posted.append(lst_dp)
 
-    print(jobs_lst)
-    print(partial_urls)
-    print(len(partial_urls))
+    jobs_df = pd.DataFrame(pd.Series(jobs_lst2), columns = ['Role'])
+
+    #print(jobs_lst)
+    #print(date_posted)
+    #print(len(date_posted), len(jobs_df.index))
+    #print(partial_urls)
+    #print(len(partial_urls))
 
     jobs_df.insert(0, 'Company', company_name)
+
     jobs_df['URL'] = pd.DataFrame(partial_urls)
     s = 'myworkdayjobs.com'
     idx_crit = url.find(s) + len(s)
     jobs_df['URL'] = url[ : idx_crit] + jobs_df['URL']
+
+    jobs_df.insert(jobs_df.columns.get_loc('URL'), 'Date Posted', date_posted)
+
+    #if len(date_posted) != len(jobs_df.index):
+    #    diff = len(date_posted) - len(jobs_df.index)
+    #    date_posted = date_posted[:-diff]
+
+    #jobs_df['Date Posted'] = date_posted
 
     print(jobs_df)
     return jobs_df
@@ -145,12 +163,11 @@ def save_newjobs(new_jobs, file_name):
 
     print("New jobs on the given webpage added to the existing Excel file", file_name)
 
-#targetlinks_df = pd.read_excel('careerswebsitelinks2.xlsx')
-#for idx, row in targetlinks_df.iterrows():
-#    new_jobs(row[0], row[1])
-
-#bxt = create_jobsdf('Blackstone', 'https://blackstone.wd1.myworkdayjobs.com/en-US/Blackstone_Careers')
-fil = create_jobsdf('Fidelity International', 'https://fil.wd3.myworkdayjobs.com/en-US/001')
+targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
+for idx, row in targetlinks_df.iterrows():
+    if row[2] == 'W':
+        print("Jobs dataframe for " + '\033[1m' + row[0] + '\033[0m')
+        create_jobsdf(row[0], row[1])
 
 '''
 Pull Request Description
