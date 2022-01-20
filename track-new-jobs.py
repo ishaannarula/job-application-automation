@@ -10,9 +10,9 @@ pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
 from datetime import datetime
 
 def get_all(myjson): #U
-    """ Recursively find the keys and associated values in all the dictionaries
+    ''' Recursively find the keys and associated values in all the dictionaries
         in the json object or list.
-    """
+    '''
     if isinstance(myjson, dict):
         for jsonkey, jsonvalue in myjson.items():
             if not isinstance(jsonvalue, (dict, list)):
@@ -31,7 +31,6 @@ def create_jobsdf(company_name, url):
     Returns a dataframe of the first 50 (or fewer) positions listed on a company's Workday website
     at the time the function is run.
     '''
-
     url = str(url)
     company_name = str(company_name)
 
@@ -93,14 +92,12 @@ def create_jobsdf(company_name, url):
     print(jobs_df)
     return jobs_df
 
-
 def first_jobsdf_toexcel(company_name, url):
     '''
     Saves the jobs dataframe created for the first time using the create_jobsdf function as an Excel file
     named after the company, adding a 'Date Viewed' column which specifies the date and
     time the jobs were viewed and dataframe was saved
     '''
-
     url = str(url)
     company_name = str(company_name)
 
@@ -122,7 +119,6 @@ def new_jobs(company_name, url):
     when they were posted for the first time
     - Posts with the same job title but different job IDs appear only once (maybe that's because of the above point)
     '''
-
     url = str(url)
     company_name = str(company_name)
 
@@ -156,28 +152,44 @@ def save_newjobs(new_jobs, file_name):
     '''
     Saves new jobs viewed on a given company's webpage to the company's pre-existing Excel file
     '''
-
     prev_jobs_df = pd.read_excel('Dataframes/' + file_name, index_col = [0])
     updated_jobs_df = pd.concat([new_jobs, prev_jobs_df])
     updated_jobs_df.to_excel('Dataframes/' + file_name)
 
     print("New jobs on the given webpage added to the existing Excel file", file_name)
 
-targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
-for idx, row in targetlinks_df.iterrows():
-    if row[2] == 'W':
-        print("Jobs dataframe for " + '\033[1m' + row[0] + '\033[0m')
-        create_jobsdf(row[0], row[1])
+def dfs_old20220120_tonew(file_name):
+    '''
+    Converts dataframes saved in old format in folder Dataframes to new format
+    '''
+    old_df = pd.read_excel('Dataframes (Old Format 2022 01 20)/' + file_name, index_col=[0])
+    #print('\033[1m' + 'Old Dataframe for ' + file_name + '\033[0m')
+    #print(old_df)
+    #old_df['Job ID'] = old_df['Job ID'].astype('Int64') #Only for Vontobel
 
-def dfs_oldtonew():
-    '''
-    Converts dataframes saved in old format to new format
-    '''
+    combined = old_df[['Position', 'Division', 'Job ID', 'Location']].values.tolist()
+    old_df.insert(old_df.columns.get_loc('Date Posted'), 'Role', combined)
+
+    new_df = old_df[['Company', 'Role', 'Date Posted', 'URL', 'Date Viewed']]
+    #print('\033[1m' + 'New Dataframe for ' + file_name + '\033[0m')
+    #print(new_df)
+
+    new_df.to_excel('Dataframes/' + file_name)
+    print('Converted old dataframe format for file ' + '\033[1m' + file_name + '\033[0m')
+
+#targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
+#for idx, row in targetlinks_df.iterrows():
+#    if row[2] == 'W':
+#        print("Jobs dataframe for " + '\033[1m' + row[0] + '\033[0m')
+#        create_jobsdf(row[0], row[1])
+
 
 
 '''
 Pull Request Description
-Moving from a structure with separate columns for 'Company Name', 'Position', 'Job ID', 'Date Posted', 'URL'... 
-to a structure which combines all position details in one column, and keeps other columns for date posted, company name, 
-URL and date viewed.
+Moving from a dataframe structure with separate columns for 'Company Name', 'Position', 'Job ID', 'Date Posted', 'URL'... 
+to a structure which combines all position details in one column (i.e. position name, job ID, division, location, etc.) but 
+keeps separate columns for date posted, company name, URL and date viewed.
+
+Did not carry out the above conversion for Blackstone and Blackstone Campus
 '''
