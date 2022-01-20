@@ -169,6 +169,12 @@ for idx, row in targetlinks_df.iterrows():
         print("Jobs dataframe for " + '\033[1m' + row[0] + '\033[0m')
         create_jobsdf(row[0], row[1])
 
+def dfs_oldtonew():
+    '''
+    Converts dataframes saved in old format to new format
+    '''
+
+
 '''
 Pull Request Description
 Moving from a structure with separate columns for 'Company Name', 'Position', 'Job ID', 'Date Posted', 'URL'... 
