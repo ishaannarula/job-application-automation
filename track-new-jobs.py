@@ -26,6 +26,13 @@ def get_all(myjson): #U
                 for k, v in get_all(element):
                     yield k, v
 
+def df_column_switch(df, column1, column2):
+    i = list(df.columns)
+    a, b = i.index(column1), i.index(column2)
+    i[b], i[a] = i[a], i[b]
+    df = df[i]
+    return df
+
 def create_jobsdf(company_name, url):
     '''
     Returns a dataframe of the first 50 (or fewer) positions listed on a company's Workday website
@@ -183,14 +190,7 @@ def dfs_old20220120_tonew(file_name):
     new_df.to_excel('Dataframes/' + file_name)
     print('Converted old dataframe format for file ' + '\033[1m' + file_name + '\033[0m')
 
-def df_column_switch(df, column1, column2):
-    i = list(df.columns)
-    a, b = i.index(column1), i.index(column2)
-    i[b], i[a] = i[a], i[b]
-    df = df[i]
-    return df
-
-#targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
-#for idx, row in targetlinks_df.iterrows():
-#    if row[2] == 'W':
-#        new_jobs(row[0], row[1], save_to_excel = False)
+targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
+for idx, row in targetlinks_df.iterrows():
+    if row[2] == 'W':
+        new_jobs(row[0], row[1], save_to_excel = False)
