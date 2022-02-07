@@ -1,4 +1,4 @@
-import json
+import json, requests
 from urllib.request import Request, urlopen
 import pprint
 import pandas as pd
@@ -46,7 +46,7 @@ def create_jobsdf(company_name, url):
     raw = urlopen(req).read().decode()
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down for the first time.
 
-    #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
+    pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
 
     jobs_lst = []
     partial_urls = []
@@ -203,10 +203,12 @@ def dfs_old20220120_tonew(file_name):
     new_df.to_excel('Dataframes/' + file_name)
     print('Converted old dataframe format for file ' + '\033[1m' + file_name + '\033[0m')
 
-targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
-for idx, row in targetlinks_df.iterrows():
-    if (row[2] == 'W' and row[3] == 'G'):
-        new_jobs(row[0], row[1], save_to_excel = False)
+#targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
+#for idx, row in targetlinks_df.iterrows():
+#    if (row[2] == 'W' and row[3] == 'G'):
+#        new_jobs(row[0], row[1], save_to_excel = False)
+
+create_jobsdf('Wellington Management', 'https://wellington.wd5.myworkdayjobs.com/External')
 
 
 '''
