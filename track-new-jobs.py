@@ -1,5 +1,6 @@
 import json, requests
 from urllib.request import Request, urlopen
+from bs4 import BeautifulSoup
 import pprint
 import pandas as pd
 desired_width = 320
@@ -32,6 +33,32 @@ def df_column_switch(df, column1, column2):
     i[b], i[a] = i[a], i[b]
     df = df[i]
     return df
+
+def create_jobsdf_greenhouse(company_name, url):
+    '''
+    Add function description here
+    '''
+    url = str(url)
+    company_name = str(company_name)
+
+    page = requests.get(url)
+    sections = BeautifulSoup(page.text, 'html.parser').find_all('section', {'class': 'level-0'})
+
+    roles = []
+    role_urls = []
+    for section in sections:
+        for opening in section.find_all('div', {'class': 'opening'}):
+            print(opening)
+            print(' ')
+
+            role_title = opening.find('a').getText().strip()
+            role_location = opening.find('span', {'class': 'location'}).getText().strip()
+            roles.append(role_title + ' - ' + role_location)
+
+            opening.find('a')
+
+    print(roles)
+
 
 def create_jobsdf(company_name, url):
     '''
@@ -208,7 +235,7 @@ def dfs_old20220120_tonew(file_name):
 #    if (row[2] == 'W' and row[3] == 'G'):
 #        new_jobs(row[0], row[1], save_to_excel = False)
 
-create_jobsdf('Wellington Management', 'https://wellington.wd5.myworkdayjobs.com/External')
+create_jobsdf_greenhouse('Engineers Gate', 'https://boards.greenhouse.io/engineersgate')
 
 
 '''
