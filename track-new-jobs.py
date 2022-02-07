@@ -44,7 +44,7 @@ def create_jobsdf(company_name, url):
     req = Request(url)
     req.add_header("Accept", "application/json,application/xml")
     raw = urlopen(req).read().decode()
-    page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down.
+    page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down for the first time.
 
     #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
 
@@ -73,7 +73,13 @@ def create_jobsdf(company_name, url):
         jobs_lst2.append(lst2)
         date_posted.append(lst_dp)
 
-    jobs_df = pd.DataFrame(pd.Series(jobs_lst2), columns = ['Role'])
+    if (company_name == 'Blackstone' or
+        company_name == 'Blackstone Campus' or
+        company_name == 'T. Rowe Price International'):
+        jobs_df = pd.DataFrame()
+
+    else:
+        jobs_df = pd.DataFrame(pd.Series(jobs_lst2), columns = ['Role'])
 
     #print(jobs_lst)
     #print(date_posted)
@@ -81,14 +87,14 @@ def create_jobsdf(company_name, url):
     #print(partial_urls)
     #print(len(partial_urls))
 
-    jobs_df.insert(0, 'Company', company_name)
-
     jobs_df['URL'] = pd.DataFrame(partial_urls)
     s = 'myworkdayjobs.com'
     idx_crit = url.find(s) + len(s)
     jobs_df['URL'] = url[ : idx_crit] + jobs_df['URL']
 
-    jobs_df.insert(jobs_df.columns.get_loc('URL'), 'Date Posted', date_posted)
+    jobs_df.insert(jobs_df.columns.get_loc('URL'), 'Date Posted', pd.Series(date_posted))
+
+    jobs_df.insert(0, 'Company', company_name)
 
     #if len(date_posted) != len(jobs_df.index):
     #    diff = len(date_posted) - len(jobs_df.index)
@@ -123,7 +129,7 @@ def new_jobs(company_name, url, save_to_excel = False):
 
     Drawbacks to Fix:
     - Some jobs posted earlier are often re-posted. This would not capture jobs when they are re-posted (only
-    when they were posted for the first time
+    when they were posted for the first time)
     '''
     url = str(url)
     company_name = str(company_name)
@@ -152,11 +158,18 @@ def new_jobs(company_name, url, save_to_excel = False):
     dfdiff_DatePosted = pd.merge(df_diff.copy(), latest_jobs_df, how = 'inner', on = 'URL')['Date Posted']
     df_diff.insert(df_diff.columns.get_loc('URL'), 'Date Posted', dfdiff_DatePosted)
 
-    df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
+    if (company_name == 'Blackstone' or
+        company_name == 'Blackstone Campus' or
+        company_name == 'T. Rowe Price International'):
+        df_diff.insert(df_diff.columns.get_loc('Date Posted'), 'Company', company_name)
 
-    df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')
-    df_diff = df_diff.drop('Role_x', axis = 1)
-    df_diff = df_diff.rename({'Role_y': 'Role'}, axis = 1)
+    else:
+        df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
+
+        df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')
+        df_diff = df_diff.drop('Role_x', axis = 1)
+        df_diff = df_diff.rename({'Role_y': 'Role'}, axis = 1)
+
     df_diff['Date Viewed'] = datetime.now()
 
     print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
@@ -192,5 +205,10 @@ def dfs_old20220120_tonew(file_name):
 
 targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
 for idx, row in targetlinks_df.iterrows():
-    if row[2] == 'W':
+    if (row[2] == 'W' and row[3] == 'G'):
         new_jobs(row[0], row[1], save_to_excel = False)
+
+
+'''
+Fix issues in files: Blackstone, Blackstone Campus, T. Rowe Price International
+'''
