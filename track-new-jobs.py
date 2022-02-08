@@ -3,6 +3,7 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import pprint
 import pandas as pd
+from difflib import SequenceMatcher
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
@@ -34,7 +35,7 @@ def df_column_switch(df, column1, column2):
     df = df[i]
     return df
 
-def create_jobsdf_greenhouse(company_name, url):
+def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
     '''
     Add function description here
     '''
@@ -47,20 +48,85 @@ def create_jobsdf_greenhouse(company_name, url):
     roles = []
     role_urls = []
     for section in sections:
+        #print(section)
         for opening in section.find_all('div', {'class': 'opening'}):
-            print(opening)
-            print(' ')
+            #print(opening)
+            #print(' ')
 
             role_title = opening.find('a').getText().strip()
             role_location = opening.find('span', {'class': 'location'}).getText().strip()
-            roles.append(role_title + ' - ' + role_location)
 
-            opening.find('a')
+            partial_url = [elem.get('href') for elem in opening.find_all('a')][0]
+            job_no = partial_url.split('/')[-1]
 
-    print(roles)
+            common_size = SequenceMatcher(None, partial_url, url).get_matching_blocks()[0].size   #U #.find_longest_match(0, len(partial_url), 0, len(url))
+            role_url = url + partial_url[common_size : ] #U
 
+            roles.append(role_title + ' - ' + role_location + ' - ' + job_no)
+            role_urls.append(role_url)
 
-def create_jobsdf(company_name, url):
+    jobs_df = pd.DataFrame(pd.Series(roles), columns = ['Role'])
+    jobs_df['URL'] = pd.DataFrame(pd.Series(role_urls))
+    jobs_df.insert(jobs_df.columns.get_loc('Role'), 'Company', company_name)
+
+    #print(roles)
+    #print(role_urls)
+
+    if save_to_excel == True:
+        jobs_df['Date Viewed'] = datetime.now()
+        fname = company_name + '.xlsx'
+        jobs_df.to_excel('Dataframes/' + fname)
+
+        print("Jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
+
+    print(jobs_df)
+    return jobs_df
+
+def new_jobs_greenhouse(company_name, url, save_to_excel = False):
+    '''
+    Add function description here
+    '''
+    url = str(url)
+    company_name = str(company_name)
+
+    latest_jobs_df = create_jobsdf_greenhouse(company_name, url)
+    latest_jobs_df.fillna('', inplace = True)
+    latest_jobs_df.pop('Company')
+    print('latest jobs df')
+    print(latest_jobs_df)
+
+    prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
+    prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Viewed'], axis = 1)
+    prev_jobs_df.fillna('', inplace = True)
+    print('previous jobs df')
+    print(prev_jobs_df)
+
+    df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', on = 'URL', indicator = True)
+    print(df_combined)
+    df_diff = df_combined.loc[df_combined._merge == 'right_only'].reset_index(drop = True)
+    df_diff = df_diff.drop('_merge', axis = 1)
+    print(df_diff)
+
+    df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
+    df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')
+    df_diff = df_diff.drop('Role_x', axis = 1)
+    df_diff = df_diff.rename({'Role_y': 'Role'}, axis = 1)
+
+    df_diff['Date Viewed'] = datetime.now()
+
+    print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
+    print(df_diff)
+
+    if save_to_excel == True:
+        prev_jobs_df2 = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col=[0])
+        updated_jobs_df = pd.concat([df_diff, prev_jobs_df2]).reset_index(drop = True)
+        updated_jobs_df.to_excel('Dataframes/' + company_name + '.xlsx')
+
+        print("New jobs on the given webpage added to the existing Excel file", company_name + '.xlsx')
+
+    return df_diff
+
+def create_jobsdf_workday(company_name, url, save_to_excel = False):
     '''
     Returns a dataframe of the first 50 (or fewer) positions listed on a company's Workday website
     at the time the function is run.
@@ -129,27 +195,34 @@ def create_jobsdf(company_name, url):
 
     #jobs_df['Date Posted'] = date_posted
 
+    if save_to_excel == True:
+        jobs_df['Date Viewed'] = datetime.now()
+        fname = company_name + '.xlsx'
+        jobs_df.to_excel('Dataframes/' + fname)
+
+        print("First 50 jobs on the given webpage saved as a new Excel file", fname)
+
     #print(jobs_df)
     return jobs_df
 
-def first_jobsdf_toexcel(company_name, url):
-    '''
-    Saves the jobs dataframe created for the first time using the create_jobsdf function as an Excel file
-    named after the company, adding a 'Date Viewed' column which specifies the date and
-    time the jobs were viewed and dataframe was saved
-    '''
-    url = str(url)
-    company_name = str(company_name)
+#def first_jobsdf_toexcel(company_name, url):
+#    '''
+#    Saves the jobs dataframe created for the first time using the create_jobsdf_... functions as an Excel file
+#    named after the company, adding a 'Date Viewed' column which specifies the date and
+#    time the jobs were viewed and dataframe was saved
+#    '''
+#    url = str(url)
+#    company_name = str(company_name)
+#
+#   jobs_df = create_jobsdf(company_name, url)
+#    jobs_df['Date Viewed'] = datetime.now()
+#
+#    fname = company_name + '.xlsx'
+#    jobs_df.to_excel('Dataframes/'+ fname)
+#
+#    print("First 50 jobs on the given webpage saved as a new Excel file", fname)
 
-    jobs_df = create_jobsdf(company_name, url)
-    jobs_df['Date Viewed'] = datetime.now()
-
-    fname = company_name + '.xlsx'
-    jobs_df.to_excel('Dataframes/'+ fname)
-
-    print("First 50 jobs on the given webpage saved as a new Excel file", fname)
-
-def new_jobs(company_name, url, save_to_excel = False):
+def new_jobs_workday(company_name, url, save_to_excel = False):
     '''
     Returns a dataframe with new jobs added/ existing jobs changed on the company's Workday website compared
     with the jobs in the last saved Excel file
@@ -161,7 +234,7 @@ def new_jobs(company_name, url, save_to_excel = False):
     url = str(url)
     company_name = str(company_name)
 
-    latest_jobs_df = create_jobsdf(company_name, url)
+    latest_jobs_df = create_jobsdf_workday(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
     latestdf_DatePosted = latest_jobs_df.pop('Date Posted')
     latest_jobs_df.pop('Company')
@@ -234,10 +307,3 @@ def dfs_old20220120_tonew(file_name):
 #for idx, row in targetlinks_df.iterrows():
 #    if (row[2] == 'W' and row[3] == 'G'):
 #        new_jobs(row[0], row[1], save_to_excel = False)
-
-create_jobsdf_greenhouse('Engineers Gate', 'https://boards.greenhouse.io/engineersgate')
-
-
-'''
-Fix issues in files: Blackstone, Blackstone Campus, T. Rowe Price International
-'''
