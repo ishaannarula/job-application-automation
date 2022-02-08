@@ -9,6 +9,13 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
 from datetime import datetime
 
+def df_column_switch(df, column1, column2):
+    i = list(df.columns)
+    a, b = i.index(column1), i.index(column2)
+    i[b], i[a] = i[a], i[b]
+    df = df[i]
+    return df
+
 def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
     '''
     Add function description here
@@ -66,20 +73,20 @@ def new_jobs_greenhouse(company_name, url, save_to_excel = False):
     latest_jobs_df = create_jobsdf_greenhouse(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
     latest_jobs_df.pop('Company')
-    print('latest jobs df')
-    print(latest_jobs_df)
+    #print('latest jobs df')
+    #print(latest_jobs_df)
 
     prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
     prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Viewed'], axis = 1)
     prev_jobs_df.fillna('', inplace = True)
-    print('previous jobs df')
-    print(prev_jobs_df)
+    #print('previous jobs df')
+    #print(prev_jobs_df)
 
     df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', on = 'URL', indicator = True)
-    print(df_combined)
+    #print(df_combined)
     df_diff = df_combined.loc[df_combined._merge == 'right_only'].reset_index(drop = True)
     df_diff = df_diff.drop('_merge', axis = 1)
-    print(df_diff)
+    #print(df_diff)
 
     df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
     df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')

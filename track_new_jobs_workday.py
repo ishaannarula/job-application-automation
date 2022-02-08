@@ -46,7 +46,7 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
     raw = urlopen(req).read().decode()
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down for the first time.
 
-    pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
+    #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
 
     jobs_lst = []
     partial_urls = []
