@@ -209,8 +209,3 @@ def dfs_old20220120_tonew(file_name):
 
     new_df.to_excel('Dataframes/' + file_name)
     print('Converted old dataframe format for file ' + '\033[1m' + file_name + '\033[0m')
-
-#targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
-#for idx, row in targetlinks_df.iterrows():
-#    if (row[2] == 'W' and row[3] == 'G'):
-#        new_jobs(row[0], row[1], save_to_excel = False)
