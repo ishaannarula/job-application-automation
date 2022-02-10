@@ -5,7 +5,7 @@ from difflib import SequenceMatcher
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
-pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_rows', 1000)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
 from datetime import datetime
 
@@ -30,6 +30,7 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
     role_urls = []
     for section in sections:
         #print(section)
+
         for opening in section.find_all('div', {'class': 'opening'}):
             #print(opening)
             #print(' ')
@@ -38,10 +39,21 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
             role_location = opening.find('span', {'class': 'location'}).getText().strip()
 
             partial_url = [elem.get('href') for elem in opening.find_all('a')][0]
-            job_no = partial_url.split('/')[-1]
 
-            common_size = SequenceMatcher(None, partial_url, url).get_matching_blocks()[0].size   #U #.find_longest_match(0, len(partial_url), 0, len(url))
-            role_url = url + partial_url[common_size : ] #U
+            if ((company_name == 'Optiver') or
+                (company_name == 'Glovo') or
+                (company_name == 'Graviton Research Capital')):
+                job_no = partial_url.split('/')[-1].split('=')[-1]
+                role_url = partial_url
+
+            elif company_name == 'Squarepoint Capital':
+                job_no = partial_url.split('/')[-1].split('=')[-1]
+                role_url = partial_url.split('?')[0] + '/job#' + job_no
+
+            else:
+                job_no = partial_url.split('/')[-1]
+                common_size = SequenceMatcher(None, partial_url, url).get_matching_blocks()[0].size   #U #.find_longest_match(0, len(partial_url), 0, len(url))
+                role_url = url + partial_url[common_size : ] #U
 
             roles.append(role_title + ' - ' + role_location + ' - ' + job_no)
             role_urls.append(role_url)

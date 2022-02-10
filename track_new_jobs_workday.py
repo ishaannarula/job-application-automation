@@ -1,11 +1,11 @@
-import json
+import json, requests
 from urllib.request import Request, urlopen
 import pprint
 import pandas as pd
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
-pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_rows', 1000)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
 from datetime import datetime
 
@@ -44,6 +44,7 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
     req = Request(url)
     req.add_header("Accept", "application/json,application/xml")
     raw = urlopen(req).read().decode()
+    #print('Raw', raw)
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down for the first time.
 
     #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
