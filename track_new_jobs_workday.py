@@ -43,6 +43,7 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
 
     req = Request(url)
     req.add_header("Accept", "application/json,application/xml")
+    req.add_header('User-agent', 'Mozilla/5.0 (Linux i686)')
     raw = urlopen(req).read().decode()
     #print('Raw', raw)
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down for the first time.
