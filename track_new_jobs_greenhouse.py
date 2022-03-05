@@ -70,7 +70,7 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
         fname = company_name + '.xlsx'
         jobs_df.to_excel('Dataframes/' + fname)
 
-        print("Jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
+        print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
 
     #print(jobs_df)
     return jobs_df
