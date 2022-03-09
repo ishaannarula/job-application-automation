@@ -2,9 +2,9 @@ import os
 import shutil
 from finder_sidebar_editor import FinderSidebar
 
-dirLst = []
+dirLst = ['Folder Name 1', 'Folder Name 2']
 
-parent_dir = 'enter file path'
+parent_dir = 'enter directory path to house folders in dirLst'
 
 for dir in dirLst:
     # Create folder
@@ -12,8 +12,8 @@ for dir in dirLst:
     os.mkdir(path)
 
     # Add CV files
-    cv_location = 'enter file path'
-    cv_files = ['CV_Ishaan Narula.docx', 'CV_Ishaan Narula.pdf']
+    cv_location = 'enter directory path where CV files are located'
+    cv_files = ['cvfname.docx', 'cvfname.pdf']
 
     for f in cv_files:
         src = os.path.join(cv_location, f)

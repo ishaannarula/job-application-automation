@@ -12,4 +12,3 @@ for idx, row in targetlinks_df.iterrows():
         new_jobs_greenhouse(row[0], row[1], save_to_excel = False)
         print(' ')
         print(' ')
-
