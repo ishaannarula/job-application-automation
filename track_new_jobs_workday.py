@@ -107,7 +107,7 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
     if save_to_excel == True:
         jobs_df['Date Viewed'] = datetime.now()
         fname = company_name + '.xlsx'
-        jobs_df.to_excel('Dataframes/' + fname)
+        jobs_df.to_excel('Dataframes-sample/' + fname)
 
         print("First 50 jobs on the given webpage saved as a new Excel file", fname)
 
@@ -150,7 +150,7 @@ def new_jobs_workday(company_name, url, save_to_excel = False):
     #print('latest jobs df')
     #print(latest_jobs_df)
 
-    prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
+    prev_jobs_df = pd.read_excel('Dataframes-sample/' + company_name + '.xlsx', index_col = [0], dtype = object)
     prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Posted', 'Date Viewed'], axis = 1)
     prev_jobs_df.fillna('', inplace = True)
     #print('previous jobs df')
@@ -185,9 +185,9 @@ def new_jobs_workday(company_name, url, save_to_excel = False):
     print(df_diff)
 
     if save_to_excel == True:
-        prev_jobs_df2 = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col=[0])
+        prev_jobs_df2 = pd.read_excel('Dataframes-sample/' + company_name + '.xlsx', index_col=[0])
         updated_jobs_df = pd.concat([df_diff, prev_jobs_df2]).reset_index(drop = True)
-        updated_jobs_df.to_excel('Dataframes/' + company_name + '.xlsx')
+        updated_jobs_df.to_excel('Dataframes-sample/' + company_name + '.xlsx')
 
         print("New jobs on the given webpage added to the existing Excel file", company_name + '.xlsx')
 
