@@ -1,11 +1,11 @@
-import json
+import json, requests
 from urllib.request import Request, urlopen
 import pprint
 import pandas as pd
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
-pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_rows', 1000)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
 from datetime import datetime
 
@@ -33,7 +33,7 @@ def df_column_switch(df, column1, column2):
     df = df[i]
     return df
 
-def create_jobsdf(company_name, url):
+def create_jobsdf_workday(company_name, url, save_to_excel = False):
     '''
     Returns a dataframe of the first 50 (or fewer) positions listed on a company's Workday website
     at the time the function is run.
@@ -43,7 +43,9 @@ def create_jobsdf(company_name, url):
 
     req = Request(url)
     req.add_header("Accept", "application/json,application/xml")
+    req.add_header('User-agent', 'Mozilla/5.0 (Linux i686)')
     raw = urlopen(req).read().decode()
+    #print('Raw', raw)
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down for the first time.
 
     #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
@@ -102,27 +104,34 @@ def create_jobsdf(company_name, url):
 
     #jobs_df['Date Posted'] = date_posted
 
+    if save_to_excel == True:
+        jobs_df['Date Viewed'] = datetime.now()
+        fname = company_name + '.xlsx'
+        jobs_df.to_excel('Dataframes-sample/' + fname)
+
+        print("First 50 jobs on the given webpage saved as a new Excel file", fname)
+
     #print(jobs_df)
     return jobs_df
 
-def first_jobsdf_toexcel(company_name, url):
-    '''
-    Saves the jobs dataframe created for the first time using the create_jobsdf function as an Excel file
-    named after the company, adding a 'Date Viewed' column which specifies the date and
-    time the jobs were viewed and dataframe was saved
-    '''
-    url = str(url)
-    company_name = str(company_name)
+#def first_jobsdf_toexcel(company_name, url):
+#    '''
+#    Saves the jobs dataframe created for the first time using the create_jobsdf_... functions as an Excel file
+#    named after the company, adding a 'Date Viewed' column which specifies the date and
+#    time the jobs were viewed and dataframe was saved
+#    '''
+#    url = str(url)
+#    company_name = str(company_name)
+#
+#   jobs_df = create_jobsdf(company_name, url)
+#    jobs_df['Date Viewed'] = datetime.now()
+#
+#    fname = company_name + '.xlsx'
+#    jobs_df.to_excel('Dataframes/'+ fname)
+#
+#    print("First 50 jobs on the given webpage saved as a new Excel file", fname)
 
-    jobs_df = create_jobsdf(company_name, url)
-    jobs_df['Date Viewed'] = datetime.now()
-
-    fname = company_name + '.xlsx'
-    jobs_df.to_excel('Dataframes/'+ fname)
-
-    print("First 50 jobs on the given webpage saved as a new Excel file", fname)
-
-def new_jobs(company_name, url, save_to_excel = False):
+def new_jobs_workday(company_name, url, save_to_excel = False):
     '''
     Returns a dataframe with new jobs added/ existing jobs changed on the company's Workday website compared
     with the jobs in the last saved Excel file
@@ -134,14 +143,14 @@ def new_jobs(company_name, url, save_to_excel = False):
     url = str(url)
     company_name = str(company_name)
 
-    latest_jobs_df = create_jobsdf(company_name, url)
+    latest_jobs_df = create_jobsdf_workday(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
     latestdf_DatePosted = latest_jobs_df.pop('Date Posted')
     latest_jobs_df.pop('Company')
     #print('latest jobs df')
     #print(latest_jobs_df)
 
-    prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
+    prev_jobs_df = pd.read_excel('Dataframes-sample/' + company_name + '.xlsx', index_col = [0], dtype = object)
     prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Posted', 'Date Viewed'], axis = 1)
     prev_jobs_df.fillna('', inplace = True)
     #print('previous jobs df')
@@ -176,9 +185,9 @@ def new_jobs(company_name, url, save_to_excel = False):
     print(df_diff)
 
     if save_to_excel == True:
-        prev_jobs_df2 = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col=[0])
+        prev_jobs_df2 = pd.read_excel('Dataframes-sample/' + company_name + '.xlsx', index_col=[0])
         updated_jobs_df = pd.concat([df_diff, prev_jobs_df2]).reset_index(drop = True)
-        updated_jobs_df.to_excel('Dataframes/' + company_name + '.xlsx')
+        updated_jobs_df.to_excel('Dataframes-sample/' + company_name + '.xlsx')
 
         print("New jobs on the given webpage added to the existing Excel file", company_name + '.xlsx')
 
@@ -202,13 +211,3 @@ def dfs_old20220120_tonew(file_name):
 
     new_df.to_excel('Dataframes/' + file_name)
     print('Converted old dataframe format for file ' + '\033[1m' + file_name + '\033[0m')
-
-targetlinks_df = pd.read_excel('careerswebsitelinks.xlsx')
-for idx, row in targetlinks_df.iterrows():
-    if (row[2] == 'W' and row[3] == 'G'):
-        new_jobs(row[0], row[1], save_to_excel = False)
-
-
-'''
-Fix issues in files: Blackstone, Blackstone Campus, T. Rowe Price International
-'''

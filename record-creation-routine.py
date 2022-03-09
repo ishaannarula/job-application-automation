@@ -1,22 +1,29 @@
-# Create folder
 import os
-directory = 'enter folder name for job opening (e.g. Company Name - Position Name - Job ID - Location'
-parent_dir = '/Volumes/GoogleDrive/My Drive/Career/Search/Applications/To be Added to Excel Database/'
-path = os.path.join(parent_dir, directory)
-os.mkdir(path)
-
-# Add CV files
-cv_location = 'enter file path'
-cv_files = ['fname.docx', 'fname.pdf']
-
 import shutil
-for f in cv_files:
-    src = os.path.join(cv_location, f)
-    shutil.copy2(src, path)
-
-# Add resulting folder to favourites
 from finder_sidebar_editor import FinderSidebar
-FinderSidebar().add(path)
+
+dirLst = ['Folder Name 1', 'Folder Name 2']
+
+parent_dir = 'enter directory path to house folders in dirLst'
+
+for dir in dirLst:
+    # Create folder
+    path = os.path.join(parent_dir, dir)
+    os.mkdir(path)
+
+    # Add CV files
+    cv_location = 'enter directory path where CV files are located'
+    cv_files = ['cvfname.docx', 'cvfname.pdf']
+
+    for f in cv_files:
+        src = os.path.join(cv_location, f)
+        shutil.copy2(src, path)
+
+    # Add resulting folder to favourites
+    FinderSidebar().add(path)
+
+
+
 
 # Rough
 #print(os.path.abspath(directory))
