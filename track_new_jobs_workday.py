@@ -1,39 +1,244 @@
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import StaleElementReferenceException
+
+from webdriver_manager.chrome import ChromeDriverManager
 import json, requests
 from urllib.request import Request, urlopen
 import pprint
 import pandas as pd
+import numpy as np
+from datetime import datetime
+import time
+#import progressbar
+import os
+from helper_functions import *
+from bs4 import BeautifulSoup
+from difflib import SequenceMatcher
+
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
-pd.set_option('display.max_rows', 1000)
+pd.set_option('display.max_rows', 10000)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
-from datetime import datetime
 
-def get_all(myjson): #U
-    ''' Recursively find the keys and associated values in all the dictionaries
-        in the json object or list.
+def create_jobsdf_workday_selenium_bs(company_name, url, save_to_excel = False, recently_posted = False):
+    os.environ['WDM_LOG_LEVEL'] = '0'
+    option = webdriver.ChromeOptions()
+    option.add_argument('headless')
+    option.add_experimental_option("excludeSwitches", ["enable-logging"])
+
+    caps = webdriver.DesiredCapabilities().CHROME.copy()
+    caps["pageLoadStrategy"] = "normal"
+
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), desired_capabilities = caps, options = option)
+    driver.get(url)
+
+    WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.XPATH, "//ul[@role = 'list']")))
+
+    #print(driver.page_source)
+
+    roles = []
+    role_urls = []
+    recent_roles = []
+    recent_role_urls = []
+
+    while True:
+        sections = BeautifulSoup(driver.page_source, 'html.parser').find_all('li', {'class': 'css-1q2dra3'})
+        #print(sections)
+
+        for section in sections:
+            #print(section)
+
+            try: role = section.find('a', {'data-automation-id': 'jobTitle'}).getText()
+            except: role = 'Role Name Unspecified'
+
+            try: location = section.find('div', {'class': 'css-248241'}).find('dd', {'class': 'css-129m7dg'}).getText()
+            except: location = 'Location Unspecified'
+
+            try:
+                partial_url = section.find('a', {'data-automation-id': 'jobTitle'}).get('href')
+                common_size = SequenceMatcher(None, partial_url, url).get_matching_blocks()[0].size  # U #.find_longest_match(0, len(partial_url), 0, len(url))
+                role_url = url + partial_url[common_size : ] #U
+
+            except: role_url = 'URL Unspecified'
+
+            try: dateposted = section.find('div', {'class': 'css-zoser8'}).find('dd', {'class': 'css-129m7dg'}).getText()
+            except: dateposted = 'Date Posted Unspecified'
+
+            #print(role)
+            #print(location)
+            #print(role_url)
+            #print(dateposted)
+
+            fullrole = role + ' - ' + location + ' - ' + dateposted
+            roles.append(fullrole)
+            role_urls.append(role_url)
+
+            if recently_posted:
+                days_num = list(range(1, 11))
+                days_wrd = ['Today', 'Yesterday']
+
+                if any(i in dateposted for i in days_wrd):
+                    recent_roles.append(fullrole)
+                    recent_role_urls.append(role_url)
+
+                for i in dateposted.split():
+                    if i.isdigit():
+                        if int(i) in days_num:
+                            recent_roles.append(fullrole)
+                            recent_role_urls.append(role_url)
+
+        try:
+            driver.find_element(by=By.XPATH, value="//button[@aria-label = 'next']").click()
+            if company_name == 'Merrill Lynch (Lateral US)': time.sleep(3)
+            elif company_name == 'M&G Investments': time.sleep(2)
+            else: time.sleep(1.5)
+
+        except: break
+
+    jobs_df = pd.DataFrame(pd.Series(roles), columns=['Role'])
+    jobs_df['URL'] = pd.Series(role_urls)
+    jobs_df.insert(0, 'Company', company_name)
+
+    recent_jobs_df = pd.DataFrame(pd.Series(recent_roles), columns = ['Role'])
+    recent_jobs_df['URL'] = pd.Series(recent_role_urls)
+    recent_jobs_df.insert(0, 'Company', company_name)
+
+    if save_to_excel:
+        jobs_df['Date Viewed'] = datetime.now()
+        fname = company_name + '.xlsx'
+        jobs_df.to_excel('Dataframes/' + fname)
+
+        print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
+
+    #print(jobs_df)
+
+    if recently_posted: return recent_jobs_df
+    else: return jobs_df
+
+def create_jobsdf_workday_selenium(company_name, url, save_to_excel = False):
     '''
-    if isinstance(myjson, dict):
-        for jsonkey, jsonvalue in myjson.items():
-            if not isinstance(jsonvalue, (dict, list)):
-                yield jsonkey, jsonvalue
-            else:
-                for k, v in get_all(jsonvalue):
-                    yield k, v
-    elif isinstance(myjson, list):
-        for element in myjson:
-            if isinstance(element, (dict, list)):
-                for k, v in get_all(element):
-                    yield k, v
+    Add description
+    '''
+    os.environ['WDM_LOG_LEVEL'] = '0'
+    option = webdriver.ChromeOptions()
+    option.add_argument('headless')
+    option.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-def df_column_switch(df, column1, column2):
-    i = list(df.columns)
-    a, b = i.index(column1), i.index(column2)
-    i[b], i[a] = i[a], i[b]
-    df = df[i]
-    return df
+    caps = webdriver.DesiredCapabilities().CHROME.copy()
+    caps["pageLoadStrategy"] = "normal"
 
-def create_jobsdf_workday(company_name, url, save_to_excel = False):
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), desired_capabilities = caps, options = option)
+    driver.get(url)
+
+    role = []
+    jobsUrls_lst = []
+    location = []
+    #jobid = []
+    dateposted = []
+    page_count = 0
+
+    WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.XPATH, "//ul[@role = 'list']")))
+
+    #bar = progressbar.ProgressBar(max_value = progressbar.UnknownLength)
+    #bar_count = 0
+
+    while True:
+        page_count += 1
+        #bar_count += 1
+        #bar.update(bar_count)
+
+        role += [i.text for i in driver.find_elements(by=By.XPATH, value="//a[@data-automation-id = 'jobTitle']")]
+        jobsUrls_lst += [i.get_attribute('href') for i in driver.find_elements(by=By.XPATH, value="//a[@data-automation-id = 'jobTitle']")]
+
+        loc = []
+        for i in driver.find_elements(by = By.XPATH, value = "//div[@class = 'css-248241']"):
+            if i.text == '': loc.append('Location Unspecified')
+            else: loc.append(i.text.splitlines()[1])
+        location += loc
+
+        #location += [i.text for i in driver.find_elements(by=By.XPATH, value="//div[@data-automation-id = 'locations']//dd")]
+
+        if ((company_name != 'Barings') and
+            (company_name != 'Blackstone') and
+            (company_name != 'Blackstone Campus')):
+            dateposted += [i.text for i in driver.find_elements(by=By.XPATH, value="//div[@data-automation-id = 'postedOn']//dl//dd")]
+
+        # ignored_exceptions = (NoSuchElementException, StaleElementReferenceException,)
+        # WebDriverWait(driver, 20, ignored_exceptions = ignored_exceptions).until(EC.presence_of_element_located((By.XPATH, "//button[@aria-label = 'next']")))
+
+        #print('THIS IS PAGE', page_count)
+
+        #print(role)
+        #print(jobsUrls_lst)
+        #print(location)
+        #print(jobid)
+        #print(dateposted)
+
+        #print(len(role))
+        #print(len(jobsUrls_lst))
+        #print(len(location))
+        #print(len(jobid))
+        #print(len(dateposted))
+
+        try:
+            driver.find_element(by = By.XPATH, value = "//button[@aria-label = 'next']").click()
+
+            if company_name == 'Merrill Lynch (Lateral US)': time.sleep(3)
+            else: time.sleep(1.5)
+            #WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.XPATH, "//ul[@role = 'list']")))
+
+        except: break
+
+    #print(role)
+    #print(jobsUrls_lst)
+    #print(location)
+    #print(jobid)
+    #print(dateposted)
+
+    #print(len(role))
+    #print(len(jobsUrls_lst))
+    #print(len(location))
+    #print(len(jobid))
+    #print(len(dateposted))
+
+    jobsRoles_lst = []
+
+    for i in range(len(role)):
+        if ((company_name != 'Barings') and
+            (company_name != 'Blackstone') and
+            (company_name != 'Blackstone Campus')):
+            jobsRoles = role[i] + ' - ' + location[i] + ' - ' + dateposted[i]
+
+        else: jobsRoles = role[i] + ' - ' + location[i]
+
+        jobsRoles_lst.append(jobsRoles)
+
+    #print(jobsRoles_lst)
+
+    jobs_df = pd.DataFrame(pd.Series(jobsRoles_lst), columns = ['Role'])
+    jobs_df['URL'] = pd.Series(jobsUrls_lst)
+    jobs_df.insert(0, 'Company', company_name)
+
+    if save_to_excel == True:
+        jobs_df['Date Viewed'] = datetime.now()
+        fname = company_name + '.xlsx'
+        jobs_df.to_excel('Dataframes/' + fname)
+
+        print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
+
+    #print(jobs_df)
+    return jobs_df
+
+def create_jobsdf_workday(company_name, url, save_to_excel = False): #Used to work with the old version of workday. Now outdated
     '''
     Returns a dataframe of the first 50 (or fewer) positions listed on a company's Workday website
     at the time the function is run.
@@ -45,7 +250,7 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
     req.add_header("Accept", "application/json,application/xml")
     req.add_header('User-agent', 'Mozilla/5.0 (Linux i686)')
     raw = urlopen(req).read().decode()
-    #print('Raw', raw)
+    print('Raw', raw)
     page_dict = json.loads(raw) #Sometimes Workday needs to be scrolled all the way to the end to load more jobs. This dict does not include jobs all the way to the end. It is unable to extract postings which appear after scrolling all the way down for the first time.
 
     #pprint.pprint(page_dict) #The above code does not work for Arrowstreet Capital
@@ -59,13 +264,11 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
         elif key == 'commandLink':
             partial_urls.append(value)
 
-    if company_name == 'Vontobel Asset Management': #for Vontobel careers site - find a more general solution later
-        n = 5
-        jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  #U
+    if company_name == 'Vontobel Asset Management': n = 5 #for Vontobel careers site - find a more general solution later
+    elif company_name == 'Barings': n = 3
+    else: n = 4
 
-    else:
-        n = 4
-        jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  #U
+    jobs_lst = [jobs_lst[i * n:(i + 1) * n] for i in range((len(jobs_lst) + n - 1) // n)]  #U
 
     jobs_lst2 = []
     date_posted = []
@@ -90,7 +293,10 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
     #print(len(partial_urls))
 
     jobs_df['URL'] = pd.DataFrame(partial_urls)
-    s = 'myworkdayjobs.com'
+
+    if company_name == 'PGIM': s = 'myworkdaysite.com'
+    else: s = 'myworkdayjobs.com'
+
     idx_crit = url.find(s) + len(s)
     jobs_df['URL'] = url[ : idx_crit] + jobs_df['URL']
 
@@ -114,22 +320,22 @@ def create_jobsdf_workday(company_name, url, save_to_excel = False):
     #print(jobs_df)
     return jobs_df
 
-#def first_jobsdf_toexcel(company_name, url):
-#    '''
-#    Saves the jobs dataframe created for the first time using the create_jobsdf_... functions as an Excel file
-#    named after the company, adding a 'Date Viewed' column which specifies the date and
-#    time the jobs were viewed and dataframe was saved
-#    '''
-#    url = str(url)
-#    company_name = str(company_name)
-#
-#   jobs_df = create_jobsdf(company_name, url)
-#    jobs_df['Date Viewed'] = datetime.now()
-#
-#    fname = company_name + '.xlsx'
-#    jobs_df.to_excel('Dataframes/'+ fname)
-#
-#    print("First 50 jobs on the given webpage saved as a new Excel file", fname)
+def first_jobsdf_toexcel(company_name, url): #Not used anymore
+    '''
+    Saves the jobs dataframe created for the first time using the create_jobsdf_... functions as an Excel file
+    named after the company, adding a 'Date Viewed' column which specifies the date and
+    time the jobs were viewed and dataframe was saved
+    '''
+    url = str(url)
+    company_name = str(company_name)
+
+    jobs_df = create_jobsdf(company_name, url)
+    jobs_df['Date Viewed'] = datetime.now()
+
+    fname = company_name + '.xlsx'
+    jobs_df.to_excel('Dataframes/'+ fname)
+
+    print("First 50 jobs on the given webpage saved as a new Excel file", fname)
 
 def new_jobs_workday(company_name, url, save_to_excel = False):
     '''
@@ -143,15 +349,14 @@ def new_jobs_workday(company_name, url, save_to_excel = False):
     url = str(url)
     company_name = str(company_name)
 
-    latest_jobs_df = create_jobsdf_workday(company_name, url)
+    latest_jobs_df = create_jobsdf_workday_selenium_bs(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
-    latestdf_DatePosted = latest_jobs_df.pop('Date Posted')
     latest_jobs_df.pop('Company')
     #print('latest jobs df')
     #print(latest_jobs_df)
 
     prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
-    prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Posted', 'Date Viewed'], axis = 1)
+    prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Viewed'], axis = 1)
     prev_jobs_df.fillna('', inplace = True)
     #print('previous jobs df')
     #print(prev_jobs_df)
@@ -163,21 +368,15 @@ def new_jobs_workday(company_name, url, save_to_excel = False):
     df_diff = df_diff.drop('_merge', axis = 1)
     #print(df_diff)
 
-    latest_jobs_df.insert(latest_jobs_df.columns.get_loc('URL'), 'Date Posted', latestdf_DatePosted)
-    dfdiff_DatePosted = pd.merge(df_diff.copy(), latest_jobs_df, how = 'inner', on = 'URL')['Date Posted']
-    df_diff.insert(df_diff.columns.get_loc('URL'), 'Date Posted', dfdiff_DatePosted)
+    #latest_jobs_df.insert(latest_jobs_df.columns.get_loc('URL'), 'Date Posted', latestdf_DatePosted)
+    #dfdiff_DatePosted = pd.merge(df_diff.copy(), latest_jobs_df, how = 'inner', on = 'URL')['Date Posted']
+    #df_diff.insert(df_diff.columns.get_loc('URL'), 'Date Posted', dfdiff_DatePosted)
 
-    if (company_name == 'Blackstone' or
-        company_name == 'Blackstone Campus' or
-        company_name == 'T. Rowe Price International'):
-        df_diff.insert(df_diff.columns.get_loc('Date Posted'), 'Company', company_name)
+    df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
 
-    else:
-        df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
-
-        df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')
-        df_diff = df_diff.drop('Role_x', axis = 1)
-        df_diff = df_diff.rename({'Role_y': 'Role'}, axis = 1)
+    df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')
+    df_diff = df_diff.drop('Role_x', axis = 1)
+    df_diff = df_diff.rename({'Role_y': 'Role'}, axis = 1)
 
     df_diff['Date Viewed'] = datetime.now()
 

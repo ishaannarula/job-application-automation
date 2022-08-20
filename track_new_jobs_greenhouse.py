@@ -2,12 +2,14 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from difflib import SequenceMatcher
+from datetime import datetime
+
 desired_width = 320
 pd.set_option('display.width', desired_width)
 pd.set_option('display.max_columns', 10)
 pd.set_option('display.max_rows', 1000)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
-from datetime import datetime
+
 
 def df_column_switch(df, column1, column2):
     i = list(df.columns)
@@ -16,7 +18,8 @@ def df_column_switch(df, column1, column2):
     df = df[i]
     return df
 
-def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
+
+def create_jobsdf_greenhouse(company_name, url, save_to_excel=False):
     '''
     Add function description here
     '''
@@ -40,15 +43,30 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
 
             partial_url = [elem.get('href') for elem in opening.find_all('a')][0]
 
-            if ((company_name == 'Optiver') or
-                (company_name == 'Glovo') or
-                (company_name == 'Graviton Research Capital')):
+            if (company_name == 'Optiver' or
+                company_name == 'Glovo' or
+                company_name == 'Graviton Research Capital' or
+                company_name == 'StepStone Group' or
+                company_name == 'Tower Research Capital' or
+                company_name == 'Artisan Partners' or
+                company_name == 'Assured Investment Management' or
+                company_name == 'Coinbase' or
+                company_name == 'GSA Capital' or
+                company_name == 'IEX' or
+                company_name == 'Jump Trading' or
+                company_name == 'Mako Trading' or
+                company_name == 'Quadeye' or
+                company_name == 'Old Mission Capital'):
                 job_no = partial_url.split('/')[-1].split('=')[-1]
                 role_url = partial_url
 
             elif company_name == 'Squarepoint Capital':
                 job_no = partial_url.split('/')[-1].split('=')[-1]
                 role_url = partial_url.split('?')[0] + '/job#' + job_no
+
+            elif company_name == 'AQR Capital Management':
+                job_no = partial_url.split('/')[-1].split('=')[-1]
+                role_url = partial_url.split('?')[0] + '/?gh_jid=' + job_no
 
             else:
                 job_no = partial_url.split('/')[-1]
@@ -74,6 +92,7 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel = False):
 
     #print(jobs_df)
     return jobs_df
+
 
 def new_jobs_greenhouse(company_name, url, save_to_excel = False):
     '''
