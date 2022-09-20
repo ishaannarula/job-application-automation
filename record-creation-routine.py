@@ -4,12 +4,9 @@ from finder_sidebar_editor import FinderSidebar
 
 var = 'create'
 
-dirLst = ['Bridgewater Associates - Trading Associate (4011824002) - Westport, CT',
-          'Bridgewater Associates - Equity Analyst, Technology Sector (6304448002) - Westport, CT',
-          'DRW - Quantitative Trading Analyst (4483161) - Singapore',
-          'WorldQuant Predictive - Mid-level Data Scientist (4623940004) - Budapest']
+dirLst = []
 
-parent_dir = '/Volumes/GoogleDrive/My Drive/Career/Jobs/Search/Applications/To be Added to Excel Database/'
+parent_dir = ''
 
 if var == 'create':
     for dir in dirLst:
@@ -18,7 +15,7 @@ if var == 'create':
         os.mkdir(path)
 
         # Add CV files
-        cv_location = '/Volumes/GoogleDrive/My Drive/Career/CVs/6 After MS Versions/English CVs/Markets, Hedge Funds, Investment Management/'
+        cv_location = ''
         cv_files = ['CV_Ishaan Narula.docx', 'CV_Ishaan Narula.pdf']
 
         for f in cv_files:

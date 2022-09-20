@@ -28,6 +28,7 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
     os.environ['WDM_LOG_LEVEL'] = '0'
     option = webdriver.ChromeOptions()
     option.add_argument('headless')
+
     option.add_experimental_option("excludeSwitches", ["enable-logging"])
 
     caps = webdriver.DesiredCapabilities().CHROME.copy()
@@ -206,25 +207,63 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
             #role_url = section.find
             #print(role)
 
-
-
         #elems = driver.find_elements(by = By.XPATH, value = "//div[@class = 'job-filter-results dark regular-jobs']//div[@class = 'job-wrapper']//div[@class = 'job']")
         #print(elems)
 
+    elif company_name == 'EDF Trading':
+        role = [i.text
+                for i in driver.find_elements(by=By.XPATH, value="//table[@id = 'cws-search-results']//tbody//b[1]//a")
+                if i.text != 'Title' and
+                i.text != 'Location' and
+                i.text != '']
+        # print(role)
 
-    jobs_df = pd.DataFrame(pd.Series(jobsRoles_lst2), columns = ['Role'])
-    jobs_df['URL'] = pd.Series(jobsUrls_lst)
-    jobs_df.insert(0, 'Company', company_name)
+        location = [i.text
+                    for i in driver.find_elements(by=By.XPATH, value="//table[@id = 'cws-search-results']//tbody//td[2]//b")]
+        # print(location)
 
-    if save_to_excel == True:
-        jobs_df['Date Viewed'] = datetime.now()
-        fname = company_name + '.xlsx'
-        jobs_df.to_excel('Dataframes/' + fname)
+        # print(len(role), len(location))
 
-        print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
+        jobsRoles_lst2 = []
 
-    #print(jobs_df)
-    return jobs_df
+        for i in range(len(role)):
+            jobsRoles = role[i] + ' - ' + location[i]
+            jobsRoles_lst2.append(jobsRoles)
+
+        jobsUrls_lst = [i.get_attribute('href')
+                for i in driver.find_elements(by=By.XPATH, value="//table[@id = 'cws-search-results']//tbody//b[1]//a")
+                if i.text != 'Title' and
+                i.text != 'Location' and
+                i.text != '']
+
+        # print(jobsRoles_lst2)
+
+    elif company_name == 'Citadel Students Full-time':
+        time.sleep(5)
+        elem = driver.find_elements(by=By.XPATH, value="//div[@id='DataTables_Table_0_filter']//table//tbody")
+        print(elem)
+
+        role = [i.text
+                for i in driver.find_elements(by=By.XPATH, value="//div[@id='DataTables_Table_0_filter']"
+                                                                 "//table[@class='sortable-table dataTable no-footer']"
+                                                                 "//tbody//tr//td[@class='sorting_1']//a")
+                ]
+        print(role)
+
+
+    # jobs_df = pd.DataFrame(pd.Series(jobsRoles_lst2), columns = ['Role'])
+    # jobs_df['URL'] = pd.Series(jobsUrls_lst)
+    # jobs_df.insert(0, 'Company', company_name)
+    #
+    # if save_to_excel == True:
+    #     jobs_df['Date Viewed'] = datetime.now()
+    #     fname = company_name + '.xlsx'
+    #     jobs_df.to_excel('Dataframes/' + fname)
+    #
+    #     print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
+    #
+    # # print(jobs_df)
+    # return jobs_df
 
 def new_jobs_withSelenium(company_name, url, save_to_excel = False):
     '''
