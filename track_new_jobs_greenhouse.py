@@ -56,7 +56,8 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel=False):
                 company_name == 'Jump Trading' or
                 company_name == 'Mako Trading' or
                 company_name == 'Quadeye' or
-                company_name == 'Old Mission Capital'):
+                company_name == 'Old Mission Capital' or
+                company_name == 'Airbnb'):
                 job_no = partial_url.split('/')[-1].split('=')[-1]
                 role_url = partial_url
 
