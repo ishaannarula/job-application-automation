@@ -157,20 +157,21 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
     elif company_name == 'Caxton Associates':
         while True:
             try:
-                WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.XPATH, "//button[@class = 'button--2de5X button--14TuV secondary--2ySVn styles--3-bqh']")))
-                driver.find_element(by = By.XPATH, value = "//button[@class = 'button--2de5X button--14TuV secondary--2ySVn styles--3-bqh']").click()
+                WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.XPATH, "//button[@class = 'button--2de5X button--14TuV primary--1i8dF styles--3-bqh']")))
+                driver.find_element(by = By.XPATH, value = "//button[@class = 'button--2de5X button--14TuV primary--1i8dF styles--3-bqh']").click()
 
             except: break
 
-        role = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job-opening']//ancestor::div[1]//h3")]
-        date_posted = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job-opening']//ancestor::div[1]//small")]
-        location = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job-opening']//ancestor::div[1]//span")]
-        jobsUrls_lst = [i.get_attribute('href') for i in driver.find_elements(by = By.XPATH, value = "//li[@data-ui='job-opening']//ancestor::div[1]//a")]
+        role = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job']//ancestor::div[1]//h2")]
+        # date_posted = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job']//small[@data-ui='job-posted']")]
+        location = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job']//span[@data-ui='job-location']")]
+        jobsUrls_lst = [i.get_attribute('href') for i in driver.find_elements(by = By.XPATH, value = "//li[@data-ui='job']//ancestor::div[1]//a")]
 
-        #print(jobsUrls_lst)
-        #print(role)
-        #print(date_posted)
-        #print(location)
+
+        # print(jobsUrls_lst)
+        # print(role)
+        # # print(date_posted)
+        # print(location)
 
         id = []
         for i in jobsUrls_lst:
@@ -181,7 +182,7 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
         jobsRoles_lst2 = []
 
         for i in range(len(role)):
-            jobsRoles = role[i] + ' - ' + location[i] + ' - ' + date_posted[i] + ' - ' + id[i]
+            jobsRoles = role[i] + ' - ' + location[i] + ' - ' + id[i]
             jobsRoles_lst2.append(jobsRoles)
 
     elif company_name == 'D.E. Shaw Full-time Jobs':
@@ -209,6 +210,49 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
 
         #elems = driver.find_elements(by = By.XPATH, value = "//div[@class = 'job-filter-results dark regular-jobs']//div[@class = 'job-wrapper']//div[@class = 'job']")
         #print(elems)
+
+    elif company_name == 'Balyasny Asset Management':
+        time.sleep(10) # to be replaced by WebDriverWait
+        role = [i.text for i in driver.find_elements(by=By.XPATH, value="//p[@class = 'jobRequisitionName']")]
+
+        location_req_dateposted = [i.text for i in driver.find_elements(
+            by=By.XPATH, value="//p[@class = 'jobRequisitionInformation']")]
+
+        # print(len(role), len(location_req_dateposted))
+        # print(role)
+        # print(location_req_dateposted)
+
+        jobsRoles_lst2 = []
+
+        for i in range(len(role)):
+            jobsRoles = role[i] + ' - ' + location_req_dateposted[i]
+            jobsRoles_lst2.append(jobsRoles)
+
+        # print(jobsRoles_lst2)
+
+        req = []
+        for i in location_req_dateposted:
+            req.append(i.split()[0])
+
+        # print(req)
+
+        role_dashed = []
+        for i in role:
+            i_dash = i.replace(' ', '-')
+            i_dash = i_dash.replace('/', '-')
+            i_dash = i_dash.replace('(', '-')
+            i_dash = i_dash.replace(')', '-')
+            i_dash = i_dash.replace(',', '-')
+            role_dashed.append(i_dash)
+
+        jobsUrls_lst = []
+        # if len(req) == len(role_dashed):
+        #     for (i, j) in zip(req, role_dashed):
+        #         url_structure = url + 'details?jobReq=' + j + '_' + i
+        #         jobsUrls_lst.append(url_structure)
+
+        jobsUrls_lst = [url] * len(jobsRoles_lst2)
+        # print(jobsUrls_lst)
 
     elif company_name == 'EDF Trading':
         role = [i.text
@@ -250,20 +294,22 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
                 ]
         print(role)
 
+    jobs_df = pd.DataFrame(pd.Series(jobsRoles_lst2), columns = ['Role'])
+    jobs_df['URL'] = pd.Series(jobsUrls_lst)
+    if company_name == 'Balyasny Asset Management':
+        jobs_df['Requisition ID'] = pd.Series(req)
+    jobs_df.insert(0, 'Company', company_name)
 
-    # jobs_df = pd.DataFrame(pd.Series(jobsRoles_lst2), columns = ['Role'])
-    # jobs_df['URL'] = pd.Series(jobsUrls_lst)
-    # jobs_df.insert(0, 'Company', company_name)
-    #
-    # if save_to_excel == True:
-    #     jobs_df['Date Viewed'] = datetime.now()
-    #     fname = company_name + '.xlsx'
-    #     jobs_df.to_excel('Dataframes/' + fname)
-    #
-    #     print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
-    #
-    # # print(jobs_df)
-    # return jobs_df
+    if save_to_excel == True:
+        jobs_df['Date Viewed'] = datetime.now()
+        fname = company_name + '.xlsx'
+        jobs_df.to_excel('Dataframes/' + fname)
+
+        print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
+
+    # print(jobs_df)
+    return jobs_df
+
 
 def new_jobs_withSelenium(company_name, url, save_to_excel = False):
     '''
@@ -275,25 +321,39 @@ def new_jobs_withSelenium(company_name, url, save_to_excel = False):
     latest_jobs_df = create_jobsdf_withSelenium(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
     latest_jobs_df.pop('Company')
-    #print('latest jobs df')
-    #print(latest_jobs_df)
+    if company_name == 'Balyasny Asset Management':
+        latest_jobs_df.pop('URL')
+
+    # print('latest jobs df')
+    # print(latest_jobs_df)
 
     prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
     prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Viewed'], axis = 1)
-    prev_jobs_df.fillna('', inplace = True)
-    #print('previous jobs df')
-    #print(prev_jobs_df)
+    if company_name == 'Balyasny Asset Management':
+        prev_jobs_df = prev_jobs_df.drop(['URL'], axis=1)
 
-    df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', on = 'URL', indicator = True)
-    #print(df_combined)
+    prev_jobs_df.fillna('', inplace = True)
+    # print('previous jobs df')
+    # print(prev_jobs_df)
+
+    if company_name == 'Balyasny Asset Management':
+        df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', on = 'Requisition ID', indicator = True)
+    else:
+        df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', on = 'URL', indicator = True)
+
+    # print(df_combined)
+
     df_diff = df_combined.loc[df_combined._merge == 'right_only'].reset_index(drop = True)
     df_diff = df_diff.drop('_merge', axis = 1)
-    #print(df_diff)
+    # print(df_diff)
 
     df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
     df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')
     df_diff = df_diff.drop('Role_x', axis = 1)
     df_diff = df_diff.rename({'Role_y': 'Role'}, axis = 1)
+
+    if company_name == 'Balyasny Asset Management':
+        df_diff.insert(df_diff.columns.get_loc('Requisition ID'), 'URL', url)
 
     df_diff['Date Viewed'] = datetime.now()
 
