@@ -157,8 +157,13 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
     elif company_name == 'Caxton Associates':
         while True:
             try:
-                WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.XPATH, "//button[@class = 'button--2de5X button--14TuV primary--1i8dF styles--3-bqh']")))
-                driver.find_element(by = By.XPATH, value = "//button[@class = 'button--2de5X button--14TuV primary--1i8dF styles--3-bqh']").click()
+                WebDriverWait(driver, 20).until(
+                    EC.visibility_of_all_elements_located((By.XPATH,
+                                                           "//button[@data-ui = 'load-more-button']"))
+                )
+                button = driver.find_element(by=By.XPATH,
+                                             value="//button[@data-ui = 'load-more-button']")
+                driver.execute_script("arguments[0].click();", button)
 
             except: break
 
@@ -167,6 +172,80 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
         location = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job']//span[@data-ui='job-location']")]
         jobsUrls_lst = [i.get_attribute('href') for i in driver.find_elements(by = By.XPATH, value = "//li[@data-ui='job']//ancestor::div[1]//a")]
 
+
+        # print(jobsUrls_lst)
+        # print(role)
+        # # print(date_posted)
+        # print(location)
+
+        id = []
+        for i in jobsUrls_lst:
+            id.append(i.split('/')[-2])
+
+        #print(id)
+
+        jobsRoles_lst2 = []
+
+        for i in range(len(role)):
+            jobsRoles = role[i] + ' - ' + location[i] + ' - ' + id[i]
+            jobsRoles_lst2.append(jobsRoles)
+
+    elif company_name == 'Trexquant Investment':
+        while True:
+            try:
+                WebDriverWait(driver, 20).until(
+                    EC.visibility_of_all_elements_located((By.XPATH,
+                                                           "//a[@data-ui = 'clear-filters']"))
+                )
+                driver.find_element(by=By.XPATH, value="//a[@data-ui = 'clear-filters']").click()
+
+                WebDriverWait(driver, 20).until(
+                    EC.visibility_of_all_elements_located((By.XPATH,
+                                                           "//button[@data-ui = 'load-more-button']"))
+                )
+                button = driver.find_element(by=By.XPATH,
+                                             value="//button[@data-ui = 'load-more-button']")
+                driver.execute_script("arguments[0].click();", button)
+
+            except: break
+        role = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job-opening']//ancestor::div[1]//h3")]
+        # date_posted = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job']//small[@data-ui='job-posted']")]
+        location = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job-opening']//span[@data-ui='job-location']")]
+        jobsUrls_lst = [i.get_attribute('href') for i in driver.find_elements(by = By.XPATH, value = "//li[@data-ui='job-opening']//ancestor::div[1]//a")]
+
+        # print(jobsUrls_lst)
+        # print(role)
+        # # print(date_posted)
+        # print(location)
+
+        id = []
+        for i in jobsUrls_lst:
+            id.append(i.split('/')[-2])
+
+        #print(id)
+
+        jobsRoles_lst2 = []
+
+        for i in range(len(role)):
+            jobsRoles = role[i] + ' - ' + location[i] + ' - ' + id[i]
+            jobsRoles_lst2.append(jobsRoles)
+
+    elif company_name == 'Hike':
+        while True:
+            try:
+                WebDriverWait(driver, 20).until(
+                    EC.visibility_of_all_elements_located((By.XPATH,
+                                                           "//button[@data-ui = 'load-more-button']"))
+                )
+                button = driver.find_element(by=By.XPATH,
+                                             value="//button[@data-ui = 'load-more-button']")
+                driver.execute_script("arguments[0].click();", button)
+
+            except: break
+        role = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job-opening']//ancestor::div[1]//h3")]
+        # date_posted = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job']//small[@data-ui='job-posted']")]
+        location = [i.text for i in driver.find_elements(by=By.XPATH, value="//li[@data-ui='job-opening']//span[@data-ui='job-location']")]
+        jobsUrls_lst = [i.get_attribute('href') for i in driver.find_elements(by = By.XPATH, value = "//li[@data-ui='job-opening']//ancestor::div[1]//a")]
 
         # print(jobsUrls_lst)
         # print(role)
