@@ -4,12 +4,9 @@ from finder_sidebar_editor import FinderSidebar
 
 var = 'create'
 
-dirLst = ['Zego - Lead Data Scientist (Pricing) (rbyAQxoXgSoprpEoMoh5Zs) - UK (Remote Working)',
-          'Point72 - Cubist - ENTRY-LEVEL QUANTITATIVE RESEARCHER (CSS-0010275) - New York | London | Hong Kong | Singapore | Dubai, UAE',
-          'Point72 - Cubist - QUANTITATIVE ANALYST (CSS-0010274) - New York',
-          'Point72 - RESEARCH ANALYST AEJ - QUANTITATIVE ANALYST (LSI-0010244) - Hong Kong',
-          'Schonfeld - Quantitative Researcher (4590869) - Singapore',
-          'Schonfeld - Quantitative Researcher (4590868) - Hong Kong']
+dirLst = [
+    
+]
 
 parent_dir = '/Volumes/GoogleDrive/My Drive/Career/Jobs/Search/Applications/To be Added to Excel Database/'
 
