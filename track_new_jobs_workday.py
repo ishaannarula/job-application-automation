@@ -60,7 +60,12 @@ def create_jobsdf_workday_selenium_bs(company_name, url, save_to_excel = False, 
             try: role = section.find('a', {'data-automation-id': 'jobTitle'}).getText()
             except: role = 'Role Name Unspecified'
 
-            try: location = section.find('div', {'class': 'css-248241'}).find('dd', {'class': 'css-129m7dg'}).getText()
+            try:
+                if company_name == 'Fidelity International':
+                    location = section.find('ul', {'class': 'css-14a0imc'}).find('li', {'class': 'css-h2nt8k'}).getText()
+                else:
+                    location = section.find('div', {'class': 'css-248241'}).find('dd', {'class': 'css-129m7dg'}).getText()
+
             except: location = 'Location Unspecified'
 
             try:
@@ -70,13 +75,18 @@ def create_jobsdf_workday_selenium_bs(company_name, url, save_to_excel = False, 
 
             except: role_url = 'URL Unspecified'
 
-            try: dateposted = section.find('div', {'class': 'css-zoser8'}).find('dd', {'class': 'css-129m7dg'}).getText()
+            try:
+                if company_name == 'Fidelity International':
+                    dateposted = section.find_all('li', {'class': 'css-h2nt8k'})[2].getText()
+                else:
+                    dateposted = section.find('div', {'class': 'css-zoser8'}).find('dd', {'class': 'css-129m7dg'}).getText()
+
             except: dateposted = 'Date Posted Unspecified'
 
-            #print(role)
-            #print(location)
-            #print(role_url)
-            #print(dateposted)
+            # print(role)
+            # print(location)
+            # print(role_url)
+            # print(dateposted)
 
             fullrole = role + ' - ' + location + ' - ' + dateposted
             roles.append(fullrole)

@@ -409,7 +409,7 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
         jobs_df['Requisition ID'] = pd.Series(req)
     jobs_df.insert(0, 'Company', company_name)
 
-    if save_to_excel == True:
+    if save_to_excel is True:
         jobs_df['Date Viewed'] = datetime.now()
         fname = company_name + '.xlsx'
         jobs_df.to_excel('Dataframes/' + fname)

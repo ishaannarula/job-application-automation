@@ -57,7 +57,11 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel=False):
                 company_name == 'Mako Trading' or
                 company_name == 'Quadeye' or
                 company_name == 'Old Mission Capital' or
-                company_name == 'Airbnb'):
+                company_name == 'Airbnb' or
+                company_name == 'Seven Eight Capital' or
+                company_name == 'Instacart' or
+                company_name == 'Akuna Capital' or
+                company_name == 'Course Hero'):
                 job_no = partial_url.split('/')[-1].split('=')[-1]
                 role_url = partial_url
 
@@ -68,6 +72,14 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel=False):
             elif company_name == 'AQR Capital Management':
                 job_no = partial_url.split('/')[-1].split('=')[-1]
                 role_url = partial_url.split('?')[0] + '/?gh_jid=' + job_no
+
+            elif company_name == 'Ripple':
+                job_no = partial_url.split('/')[-1]
+                role_url = 'https://ripple.com/careers/all-jobs/job/' + job_no
+
+            elif company_name == 'Discord':
+                job_no = partial_url.split('/')[-1]
+                role_url = 'https://discord.com/jobs/' + job_no
 
             else:
                 job_no = partial_url.split('/')[-1]
