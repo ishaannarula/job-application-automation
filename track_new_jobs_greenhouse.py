@@ -23,71 +23,131 @@ def create_jobsdf_greenhouse(company_name, url, save_to_excel=False):
     '''
     Add function description here
     '''
+    # company_name = 'AlphaGrep'
+    # url = 'https://job-boards.greenhouse.io/alphagrepsecurities' # 'https://boards.greenhouse.io/embed/job_board?for=aqr' 
+    
     url = str(url)
     company_name = str(company_name)
 
     page = requests.get(url)
+    
     sections = BeautifulSoup(page.text, 'html.parser').find_all('section', {'class': 'level-0'})
+    if not sections: sections = BeautifulSoup(page.text, 'html.parser').find_all('tr', {'class': 'job-post'})
 
     roles = []
     role_urls = []
     for section in sections:
-        #print(section)
+        # print(section)
+        
+        openings = section.find_all('div', {'class': 'opening'})
+        if not openings:
+            role_title = section.find('p', {'class': 'body body--medium'}).getText().strip()
+            role_location = section.find('p', {'class': 'body body__secondary body--metadata'}).getText().strip()
+            role_url = section.find('a').get('href')
+            job_no = role_url.split('/')[-1]
+            
+            if company_name == 'TRM Labs':
+                getHref = section.find('a').get('href')
+                job_no = getHref.split('=')[-1]
+                role_url = 'https://job-boards.greenhouse.io/embed/job_app?for=trmlabs&token=' + str(job_no)
+            
+            elif (company_name == 'Trumid' or
+                  company_name == 'Verition Fund Management'
+            ):
+                job_no = role_url.split('/')[-1].split('=')[-1]
 
-        for opening in section.find_all('div', {'class': 'opening'}):
-            #print(opening)
-            #print(' ')
-
-            role_title = opening.find('a').getText().strip()
-            role_location = opening.find('span', {'class': 'location'}).getText().strip()
-
-            partial_url = [elem.get('href') for elem in opening.find_all('a')][0]
-
-            if (company_name == 'Optiver' or
-                company_name == 'Glovo' or
-                company_name == 'Graviton Research Capital' or
-                company_name == 'StepStone Group' or
-                company_name == 'Tower Research Capital' or
-                company_name == 'Artisan Partners' or
-                company_name == 'Assured Investment Management' or
-                company_name == 'Coinbase' or
-                company_name == 'GSA Capital' or
-                company_name == 'IEX' or
-                company_name == 'Jump Trading' or
-                company_name == 'Mako Trading' or
-                company_name == 'Quadeye' or
-                company_name == 'Old Mission Capital' or
-                company_name == 'Airbnb' or
-                company_name == 'Seven Eight Capital' or
-                company_name == 'Instacart' or
-                company_name == 'Akuna Capital' or
-                company_name == 'Course Hero'):
-                job_no = partial_url.split('/')[-1].split('=')[-1]
-                role_url = partial_url
-
-            elif company_name == 'Squarepoint Capital':
-                job_no = partial_url.split('/')[-1].split('=')[-1]
-                role_url = partial_url.split('?')[0] + '/job#' + job_no
-
-            elif company_name == 'AQR Capital Management':
-                job_no = partial_url.split('/')[-1].split('=')[-1]
-                role_url = partial_url.split('?')[0] + '/?gh_jid=' + job_no
-
-            elif company_name == 'Ripple':
-                job_no = partial_url.split('/')[-1]
-                role_url = 'https://ripple.com/careers/all-jobs/job/' + job_no
-
-            elif company_name == 'Discord':
-                job_no = partial_url.split('/')[-1]
-                role_url = 'https://discord.com/jobs/' + job_no
-
-            else:
-                job_no = partial_url.split('/')[-1]
-                common_size = SequenceMatcher(None, partial_url, url).get_matching_blocks()[0].size   #U #.find_longest_match(0, len(partial_url), 0, len(url))
-                role_url = url + partial_url[common_size : ] #U
+            # print(role_title, role_location, role_url, job_no)
 
             roles.append(role_title + ' - ' + role_location + ' - ' + job_no)
-            role_urls.append(role_url)
+            role_urls.append(role_url)            
+        else:
+            for opening in openings:
+                # print(opening)
+                #print(' ')
+    
+                role_title = opening.find('a').getText().strip()
+                role_location = opening.find('span', {'class': 'location'}).getText().strip()
+    
+                partial_url = [elem.get('href') for elem in opening.find_all('a')][0]
+    
+                if (company_name == 'Optiver' or
+                    company_name == 'Glovo' or
+                    company_name == 'Graviton Research Capital' or
+                    company_name == 'StepStone Group' or
+                    company_name == 'Tower Research Capital' or
+                    company_name == 'Artisan Partners' or
+                    company_name == 'Assured Investment Management' or
+                    company_name == 'Coinbase' or
+                    company_name == 'GSA Capital' or
+                    company_name == 'IEX' or
+                    company_name == 'Jump Trading' or
+                    company_name == 'Quadeye' or
+                    company_name == 'Old Mission Capital' or
+                    company_name == 'Airbnb' or
+                    company_name == 'Seven Eight Capital' or
+                    company_name == 'Instacart' or
+                    company_name == 'Akuna Capital' or
+                    company_name == 'Course Hero' or
+                    company_name == 'Two Chairs' or
+                    company_name == 'Robinhood' or
+                    company_name == 'Preply' or
+                    company_name == 'Comet' or
+                    company_name == 'SecurityScorecard' or
+                    company_name == 'Figma' or
+                    company_name == 'Hudson River Trading' or
+                    company_name == 'KKR' or
+                    company_name == 'Preply' or
+                    company_name == 'Ripple'
+                ):
+                    job_no = partial_url.split('/')[-1].split('=')[-1]
+                    role_url = partial_url
+    
+                elif company_name == 'Squarepoint Capital':
+                    job_no = partial_url.split('/')[-1].split('=')[-1]
+                    role_url = partial_url.split('?')[0] + '/job#' + job_no
+    
+                elif (company_name == 'AQR Capital Management' or
+                      company_name == 'Betterment' or
+                      company_name == 'Brex' or
+                      company_name == 'SeatGeek' or
+                      company_name == 'Veriff'
+                ):
+                    job_no = partial_url.split('/')[-1].split('=')[-1]
+                    role_url = partial_url.split('?')[0] + '/?gh_jid=' + job_no
+    
+                elif company_name == 'Ripple':
+                    job_no = partial_url.split('/')[-1]
+                    role_url = 'https://ripple.com/careers/all-jobs/job/' + job_no
+    
+                elif (company_name == 'Discord' or company_name == 'Upstart'):
+                    job_no = partial_url.split('/')[-1]
+                    # role_url = 'https://discord.com/jobs/' + job_no
+                    role_url = partial_url
+    
+                elif company_name == 'WorldQuant':
+                    job_no = partial_url.split('/')[-1]
+                    role_url = 'https://www.worldquant.com/career-listing/?id=' + job_no
+                
+                elif company_name == 'Qube Research and Technologies':
+                    job_no = partial_url.split('=')[-1]
+                    role_url = 'https://www.qube-rt.com/careers/job?gh_jid=' + job_no
+                
+                elif company_name == 'Graham Capital Management':
+                    getHref = section.find('a').get('href')
+                    job_no = getHref.split('=')[-1]
+                    role_url = 'https://job-boards.greenhouse.io/grahamcapitalmanagement/jobs/' + job_no + '?gh_jid=' + job_no
+                
+                elif company_name == 'Mako Trading':
+                    job_no = partial_url.split('/')[-1].split('=')[-1]
+                    role_url = 'https://www.mako.com/opportunities/job-listing?gh_jid=' + job_no
+
+                else:
+                    job_no = partial_url.split('/')[-1]
+                    common_size = SequenceMatcher(None, partial_url, url).get_matching_blocks()[0].size   #U #.find_longest_match(0, len(partial_url), 0, len(url))
+                    role_url = url + partial_url[common_size : ] #U
+    
+                roles.append(role_title + ' - ' + role_location + ' - ' + job_no)
+                role_urls.append(role_url)
 
     jobs_df = pd.DataFrame(pd.Series(roles), columns = ['Role'])
     jobs_df['URL'] = pd.DataFrame(pd.Series(role_urls))
@@ -117,20 +177,20 @@ def new_jobs_greenhouse(company_name, url, save_to_excel = False):
     latest_jobs_df = create_jobsdf_greenhouse(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
     latest_jobs_df.pop('Company')
-    #print('latest jobs df')
-    #print(latest_jobs_df)
+    # print('latest jobs df')
+    # print(latest_jobs_df)
 
     prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
     prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Viewed'], axis = 1)
     prev_jobs_df.fillna('', inplace = True)
-    #print('previous jobs df')
-    #print(prev_jobs_df)
+    # print('previous jobs df')
+    # print(prev_jobs_df)
 
     df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', on = 'URL', indicator = True)
-    #print(df_combined)
+    # print(df_combined)
     df_diff = df_combined.loc[df_combined._merge == 'right_only'].reset_index(drop = True)
     df_diff = df_diff.drop('_merge', axis = 1)
-    #print(df_diff)
+    # print(df_diff)
 
     df_diff.insert(df_diff.columns.get_loc('Role_x'), 'Company', company_name)
     df_diff = df_column_switch(df_diff, 'Role_x', 'Role_y')
@@ -139,12 +199,12 @@ def new_jobs_greenhouse(company_name, url, save_to_excel = False):
 
     df_diff['Date Viewed'] = datetime.now()
 
-    print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
-    print(df_diff)
+    # print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
+    # print(df_diff)
 
     if save_to_excel == True:
         prev_jobs_df2 = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col=[0])
-        updated_jobs_df = pd.concat([df_diff, prev_jobs_df2]).reset_index(drop = True)
+        updated_jobs_df = pd.concat([df_diff, prev_jobs_df2.astype(df_diff.dtypes)], ignore_index=True)
         updated_jobs_df.to_excel('Dataframes/' + company_name + '.xlsx')
 
         print("New jobs on the given webpage added to the existing Excel file", company_name + '.xlsx')

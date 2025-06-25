@@ -29,17 +29,35 @@ pd.set_option('display.max_columns', 10)
 pd.set_option('display.max_rows', 10000)
 pd.set_option('display.max_colwidth', None) #To display full URL in dataframe
 
+
 def create_jobsdf_workday_selenium_bs(company_name, url, save_to_excel = False, recently_posted = False):
     os.environ['WDM_LOG_LEVEL'] = '0'
     option = webdriver.ChromeOptions()
+
+    # For mac
+    option.binary_location = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+
+    # For windows
+    # option.binary_location = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+
     option.add_argument('headless')
     option.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-    caps = webdriver.DesiredCapabilities().CHROME.copy()
-    caps["pageLoadStrategy"] = "normal"
+    # For mac
+    chrome_driver_binary = '/Users/ishaan/Downloads/chromedriver-mac-arm64/chromedriver' # '/usr/local/bin/chromedriver'
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), desired_capabilities = caps, options = option)
+    # For windows
+    # chrome_driver_binary = 'C:\\users\\in\\chromedriver-win32\\chromedriver.exe'
+
+    service = Service(executable_path=chrome_driver_binary)
+
+    # caps = webdriver.DesiredCapabilities().CHROME.copy()
+    # caps["pageLoadStrategy"] = "normal"
+
+    driver = webdriver.Chrome(service=service, options=option)
     driver.get(url)
+    # , service = Service(ChromeDriverManager().install())
+    # , desired_capabilities = caps
 
     WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.XPATH, "//ul[@role = 'list']")))
 
@@ -125,7 +143,12 @@ def create_jobsdf_workday_selenium_bs(company_name, url, save_to_excel = False, 
     if save_to_excel:
         jobs_df['Date Viewed'] = datetime.now()
         fname = company_name + '.xlsx'
+
+        # Mac
         jobs_df.to_excel('Dataframes/' + fname)
+
+        # Windows
+        # jobs_df.to_excel('Dataframes\\' + fname)
 
         print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
 
@@ -133,6 +156,8 @@ def create_jobsdf_workday_selenium_bs(company_name, url, save_to_excel = False, 
 
     if recently_posted: return recent_jobs_df
     else: return jobs_df
+
+
 
 def create_jobsdf_workday_selenium(company_name, url, save_to_excel = False):
     '''
@@ -343,7 +368,12 @@ def first_jobsdf_toexcel(company_name, url): #Not used anymore
     jobs_df['Date Viewed'] = datetime.now()
 
     fname = company_name + '.xlsx'
+
+    # Mac
     jobs_df.to_excel('Dataframes/'+ fname)
+
+    # Windows
+    # jobs_df.to_excel('Dataframes\\' + fname)
 
     print("First 50 jobs on the given webpage saved as a new Excel file", fname)
 
@@ -362,21 +392,26 @@ def new_jobs_workday(company_name, url, save_to_excel = False):
     latest_jobs_df = create_jobsdf_workday_selenium_bs(company_name, url)
     latest_jobs_df.fillna('', inplace = True)
     latest_jobs_df.pop('Company')
-    #print('latest jobs df')
-    #print(latest_jobs_df)
+    # print('latest jobs df')
+    # print(latest_jobs_df)
 
+    # Mac
     prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
+
+    # Windows
+    # prev_jobs_df = pd.read_excel('Dataframes\\' + company_name + '.xlsx', index_col = [0], dtype = object)
+
     prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Viewed'], axis = 1)
     prev_jobs_df.fillna('', inplace = True)
-    #print('previous jobs df')
-    #print(prev_jobs_df)
+    # print('previous jobs df')
+    # print(prev_jobs_df)
 
     #df_diff = pd.concat([prev_jobs_df,latest_jobs_df]).drop_duplicates(keep = False) #Understand
     df_combined = pd.merge(prev_jobs_df, latest_jobs_df, how = 'outer', on = 'URL', indicator = True)
-    #print(df_combined)
+    # print(df_combined)
     df_diff = df_combined.loc[df_combined._merge == 'right_only'].reset_index(drop = True)
     df_diff = df_diff.drop('_merge', axis = 1)
-    #print(df_diff)
+    # print(df_diff)
 
     #latest_jobs_df.insert(latest_jobs_df.columns.get_loc('URL'), 'Date Posted', latestdf_DatePosted)
     #dfdiff_DatePosted = pd.merge(df_diff.copy(), latest_jobs_df, how = 'inner', on = 'URL')['Date Posted']
@@ -390,13 +425,26 @@ def new_jobs_workday(company_name, url, save_to_excel = False):
 
     df_diff['Date Viewed'] = datetime.now()
 
-    print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
-    print(df_diff)
+    # print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
+    # print(df_diff)
 
     if save_to_excel == True:
+        # Mac
         prev_jobs_df2 = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col=[0])
-        updated_jobs_df = pd.concat([df_diff, prev_jobs_df2]).reset_index(drop = True)
+        # print('prev_jobs_df2')
+        # print(prev_jobs_df2)
+
+        # Windows
+        # prev_jobs_df2 = pd.read_excel('Dataframes\\' + company_name + '.xlsx', index_col=[0])
+
+        updated_jobs_df = pd.concat([df_diff, prev_jobs_df2.astype(df_diff.dtypes)], ignore_index=True)
+        # print(updated_jobs_df)
+
+        # Mac
         updated_jobs_df.to_excel('Dataframes/' + company_name + '.xlsx')
+
+        # Windows
+        # updated_jobs_df.to_excel('Dataframes\\' + company_name + '.xlsx')
 
         print("New jobs on the given webpage added to the existing Excel file", company_name + '.xlsx')
 

@@ -27,15 +27,31 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
     '''
     os.environ['WDM_LOG_LEVEL'] = '0'
     option = webdriver.ChromeOptions()
-    option.add_argument('headless')
 
+    # Mac
+    option.binary_location = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+
+    # Windows
+    # option.binary_location = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+
+    option.add_argument('headless')
     option.add_experimental_option("excludeSwitches", ["enable-logging"])
 
-    caps = webdriver.DesiredCapabilities().CHROME.copy()
-    caps["pageLoadStrategy"] = "normal"
+    # For mac
+    chrome_driver_binary = '/Users/ishaan/Downloads/chromedriver-mac-arm64/chromedriver' # '/usr/local/bin/chromedriver'
 
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), desired_capabilities = caps, options = option)
+    # For windows
+    # chrome_driver_binary = 'C:\\users\\in\\chromedriver-win32\\chromedriver.exe'
+
+    service = Service(executable_path=chrome_driver_binary)
+
+    # caps = webdriver.DesiredCapabilities().CHROME.copy()
+    # caps["pageLoadStrategy"] = "normal"
+
+    driver = webdriver.Chrome(service=service, options=option)
     driver.get(url)
+
+    # , service = Service(ChromeDriverManager().install()), desired_capabilities = caps
 
     if company_name == 'Hudson River Trading':
         jobsRoles = driver.find_elements(by = By.XPATH, value = "//table[@class = 'jobs-container']")
@@ -412,13 +428,31 @@ def create_jobsdf_withSelenium(company_name, url, save_to_excel = False):
     if save_to_excel is True:
         jobs_df['Date Viewed'] = datetime.now()
         fname = company_name + '.xlsx'
+
+        # Mac
         jobs_df.to_excel('Dataframes/' + fname)
+
+        # Windows
+        # jobs_df.to_excel('Dataframes\\' + fname)
 
         print("All jobs on the given webpage saved as a new Excel file", company_name + '.xlsx')
 
     # print(jobs_df)
     return jobs_df
 
+# tempDf = pd.read_excel('careerswebsitelinks.xlsx', sheet_name='Companies')
+
+# jobsDfDict = {}
+# for idx, row in tempDf.iterrows():
+#     if row['Category'] == 'Varied (Selenium)':
+#         print('Company in progress:', row['Target Company'], '...')
+#         try: jobsDfDict[row['Target Company']] = create_jobsdf_withSelenium(company_name=row['Target Company'], url=str(row['URL - Primary Piece']), save_to_excel=False)
+#         except: 
+#             print('Error encountered')
+#             print('')
+#         # break
+
+# jobsDf = create_jobsdf_withSelenium(company_name=row['Target Company'], url=str(row['URL - Primary Piece']), save_to_excel=False)
 
 def new_jobs_withSelenium(company_name, url, save_to_excel = False):
     '''
@@ -436,7 +470,12 @@ def new_jobs_withSelenium(company_name, url, save_to_excel = False):
     # print('latest jobs df')
     # print(latest_jobs_df)
 
-    prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
+    # Mac
+    # prev_jobs_df = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col = [0], dtype = object)
+
+    # Windows
+    prev_jobs_df = pd.read_excel('Dataframes\\' + company_name + '.xlsx', index_col = [0], dtype = object)
+
     prev_jobs_df = prev_jobs_df.drop(['Company', 'Date Viewed'], axis = 1)
     if company_name == 'Balyasny Asset Management':
         prev_jobs_df = prev_jobs_df.drop(['URL'], axis=1)
@@ -466,13 +505,23 @@ def new_jobs_withSelenium(company_name, url, save_to_excel = False):
 
     df_diff['Date Viewed'] = datetime.now()
 
-    print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
-    print(df_diff)
+    # print("New jobs added/ existing jobs changed on " + '\033[1m' + company_name + '\033[0m' + " website compared with the jobs in the last saved Excel file")
+    # print(df_diff)
 
     if save_to_excel == True:
-        prev_jobs_df2 = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col=[0])
-        updated_jobs_df = pd.concat([df_diff, prev_jobs_df2]).reset_index(drop = True)
-        updated_jobs_df.to_excel('Dataframes/' + company_name + '.xlsx')
+        # Mac
+        # prev_jobs_df2 = pd.read_excel('Dataframes/' + company_name + '.xlsx', index_col=[0])
+
+        # Windows
+        prev_jobs_df2 = pd.read_excel('Dataframes\\' + company_name + '.xlsx', index_col=[0])
+
+        updated_jobs_df = pd.concat([df_diff, prev_jobs_df2.astype(df_diff.dtypes)], ignore_index=True)
+
+        # Mac
+        # updated_jobs_df.to_excel('Dataframes/' + company_name + '.xlsx')
+
+        # Windows
+        updated_jobs_df.to_excel('Dataframes\\' + company_name + '.xlsx')
 
         print("New jobs on the given webpage added to the existing Excel file", company_name + '.xlsx')
 
